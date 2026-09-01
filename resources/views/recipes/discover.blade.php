@@ -1,0 +1,481 @@
+@extends('layouts.app')
+
+@section('title', 'Discover Recipes')
+
+@section('content')
+
+<div class="max-w-7xl mx-auto px-6 py-10">
+
+<!-- Header -->
+
+<div class="mb-8">
+
+    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-5">
+
+        <div>
+
+            <p class="text-orange-500 font-semibold mb-2">
+                🌎 Explore the community
+            </p>
+
+            <h1 class="text-4xl font-bold text-gray-800">
+                Discover Recipes
+            </h1>
+
+            <p class="text-gray-500 mt-2">
+                Discover recipes shared publicly by other users.
+            </p>
+
+        </div>
+
+        <a
+            href="{{ url('/recipes') }}"
+            class="text-orange-500 font-semibold hover:text-orange-600 transition"
+        >
+            ← My Recipes
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- Search / Filters -->
+
+<form
+    action="{{ route('recipes.discover') }}"
+    method="GET"
+    class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-8"
+>
+
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+
+        <!-- Search -->
+
+        <div class="md:col-span-2">
+
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                Search
+            </label>
+
+            <input
+                type="text"
+                name="search"
+                value="{{ request('search') }}"
+                placeholder="Search public recipes..."
+                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400"
+            >
+
+        </div>
+
+
+        <!-- Category -->
+
+        <div>
+
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                Category
+            </label>
+
+            <select
+                name="category"
+                class="w-full border border-gray-300 rounded-lg px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-400"
+            >
+
+                <option value="">
+                    All Categories
+                </option>
+
+                <option
+                    value="Breakfast"
+                    {{ request('category') === 'Breakfast' ? 'selected' : '' }}
+                >
+                    Breakfast
+                </option>
+
+                <option
+                    value="Lunch"
+                    {{ request('category') === 'Lunch' ? 'selected' : '' }}
+                >
+                    Lunch
+                </option>
+
+                <option
+                    value="Dinner"
+                    {{ request('category') === 'Dinner' ? 'selected' : '' }}
+                >
+                    Dinner
+                </option>
+
+                <option
+                    value="Dessert"
+                    {{ request('category') === 'Dessert' ? 'selected' : '' }}
+                >
+                    Dessert
+                </option>
+
+                <option
+                    value="Snack"
+                    {{ request('category') === 'Snack' ? 'selected' : '' }}
+                >
+                    Snack
+                </option>
+
+                <option
+                    value="Drinks"
+                    {{ request('category') === 'Drinks' ? 'selected' : '' }}
+                >
+                    Drinks
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- Sort -->
+
+        <div>
+
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                Sort By
+            </label>
+
+            <select
+                name="sort"
+                class="w-full border border-gray-300 rounded-lg px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-400"
+            >
+
+                <option
+                    value="newest"
+                    {{ ($sort ?? 'newest') === 'newest' ? 'selected' : '' }}
+                >
+                    Newest
+                </option>
+
+                <option
+                    value="oldest"
+                    {{ ($sort ?? '') === 'oldest' ? 'selected' : '' }}
+                >
+                    Oldest
+                </option>
+
+                <option
+                    value="name_asc"
+                    {{ ($sort ?? '') === 'name_asc' ? 'selected' : '' }}
+                >
+                    Name A–Z
+                </option>
+
+                <option
+                    value="name_desc"
+                    {{ ($sort ?? '') === 'name_desc' ? 'selected' : '' }}
+                >
+                    Name Z–A
+                </option>
+
+                <option
+                    value="time_asc"
+                    {{ ($sort ?? '') === 'time_asc' ? 'selected' : '' }}
+                >
+                    Shortest Cooking Time
+                </option>
+
+                <option
+                    value="time_desc"
+                    {{ ($sort ?? '') === 'time_desc' ? 'selected' : '' }}
+                >
+                    Longest Cooking Time
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- Submit -->
+
+        <div class="flex items-end">
+
+            <button
+                type="submit"
+                class="w-full bg-orange-500 text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition"
+            >
+                🔎 Search
+            </button>
+
+        </div>
+
+    </div>
+
+</form>
+
+
+<!-- Results -->
+
+@if ($recipes->isNotEmpty())
+
+    <div class="flex items-center justify-between mb-5">
+
+        <div>
+
+            <h2 class="text-xl font-bold text-gray-800">
+                🌎 Public Recipes
+            </h2>
+
+            <p class="text-sm text-gray-500 mt-1">
+                {{ $recipes->total() }} public recipes available
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- Recipe Grid -->
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        @foreach ($recipes as $recipe)
+
+            <div class="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition">
+
+                <!-- Image -->
+
+                @if ($recipe->image)
+
+                    <img
+                        src="{{ asset('storage/' . $recipe->image) }}"
+                        alt="{{ $recipe->name }}"
+                        class="w-full h-48 object-cover group-hover:scale-105 transition duration-500"
+                    >
+
+                @else
+
+                    <div class="bg-orange-100 h-48 flex items-center justify-center">
+
+                        <span class="text-6xl">
+                            🍳
+                        </span>
+
+                    </div>
+
+                @endif
+
+
+                <!-- Content -->
+
+                <div class="p-6">
+
+                    <div class="flex items-start justify-between gap-3">
+
+                        <h3 class="text-xl font-bold text-gray-800">
+                            {{ $recipe->name }}
+                        </h3>
+
+                        <span class="shrink-0 text-xs bg-green-50 text-green-700 px-2.5 py-1 rounded-full font-semibold">
+                            Public
+                        </span>
+
+                    </div>
+
+
+                    <!-- Owner -->
+
+                    <p class="text-sm text-gray-500 mt-2">
+                        👨‍🍳 By
+
+                        @if ($recipe->user_id === auth()->id())
+
+                            <span class="font-semibold text-orange-600">
+                                You
+                            </span>
+
+                        @else
+
+                            <span class="font-semibold text-gray-700">
+                                {{ $recipe->user->name }}
+                            </span>
+
+                        @endif
+
+                    </p>
+
+                    <!-- Description -->
+
+                    @if ($recipe->description)
+
+                        <p class="text-gray-500 mt-3 line-clamp-2">
+                            {{ $recipe->description }}
+                        </p>
+
+                    @endif
+
+
+                    <!-- Recipe Info -->
+
+                    <div class="flex flex-wrap gap-2 mt-4">
+
+                        <span class="bg-orange-50 text-orange-700 px-3 py-1 rounded-full text-sm">
+                            🏷 {{ $recipe->category }}
+                        </span>
+
+                        <span class="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm">
+                            ⏱ {{ $recipe->cooking_time }} min
+                        </span>
+
+                        <span class="bg-purple-50 text-purple-700 px-3 py-1 rounded-full text-sm">
+                            ⭐ {{ $recipe->difficulty }}
+                        </span>
+
+                    </div>
+
+
+                    <!-- Actions -->
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
+
+                        <a
+                            href="{{ url('/recipes/' . $recipe->id) }}"
+                            class="text-center bg-orange-500 text-white py-2.5 rounded-lg font-semibold hover:bg-orange-600 transition"
+                        >
+                            View Recipe
+                        </a>
+
+
+                        @auth
+
+                            @if (
+                                $recipe->favorites()
+                                    ->where('user_id', auth()->id())
+                                    ->exists()
+                            )
+
+                                <form
+                                    action="{{ url('/recipes/' . $recipe->id . '/favorite') }}"
+                                    method="POST"
+                                >
+
+                                    @csrf
+                                    @method('DELETE')
+
+                                    <button
+                                        type="submit"
+                                        class="w-full border border-red-200 text-red-500 py-2.5 rounded-lg font-semibold hover:bg-red-50 transition"
+                                    >
+                                        ❤️ Favorited
+                                    </button>
+
+                                </form>
+
+                            @else
+
+                                <form
+                                    action="{{ url('/recipes/' . $recipe->id . '/favorite') }}"
+                                    method="POST"
+                                >
+
+                                    @csrf
+
+                                    <button
+                                        type="submit"
+                                        class="w-full border border-orange-200 text-orange-500 py-2.5 rounded-lg font-semibold hover:bg-orange-50 transition"
+                                    >
+                                        ♡ Favorite
+                                    </button>
+
+                                </form>
+
+                            @endif
+
+                        @endauth
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        @endforeach
+
+    </div>
+
+
+    <!-- Pagination -->
+
+    @if ($recipes->hasPages())
+
+        <div class="mt-10 flex flex-col items-center gap-3">
+
+            <p class="text-sm text-gray-500">
+
+                Showing
+                <span class="font-semibold text-gray-700">
+                    {{ $recipes->firstItem() }}
+                </span>
+
+                -
+
+                <span class="font-semibold text-gray-700">
+                    {{ $recipes->lastItem() }}
+                </span>
+
+                of
+
+                <span class="font-semibold text-gray-700">
+                    {{ $recipes->total() }}
+                </span>
+
+                recipes
+
+            </p>
+
+
+            <div class="bg-white border border-gray-100 rounded-xl shadow-sm px-4 py-3">
+
+                {{ $recipes->links() }}
+
+            </div>
+
+        </div>
+
+    @endif
+
+
+@else
+
+    <!-- Empty State -->
+
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+
+        <div class="text-6xl mb-5">
+            🌎
+        </div>
+
+        <h2 class="text-2xl font-bold text-gray-800">
+            No Public Recipes Found
+        </h2>
+
+        <p class="text-gray-500 mt-2">
+            Try a different search or category.
+        </p>
+
+        @if (request()->hasAny(['search', 'category', 'sort']))
+
+            <a
+                href="{{ route('recipes.discover') }}"
+                class="inline-block mt-6 bg-gray-800 text-white px-5 py-3 rounded-lg font-semibold hover:bg-gray-700 transition"
+            >
+                Clear Filters
+            </a>
+
+        @endif
+
+    </div>
+
+@endif
+
+</div>
+
+@endsection
+
