@@ -100,9 +100,9 @@ class MealPlanController extends Controller
         ]);
 
         $recipe = Recipe::where('id', $validated['recipe_id'])
-        ->where(function ($query) {
+        ->where(function ($q) {
 
-            $query->where(
+            $q->where(
                 'user_id',
                 Auth::id()
             )
@@ -216,7 +216,10 @@ class MealPlanController extends Controller
 
     public function searchRecipes(Request $request)
     {
-        $query = Recipe::where('user_id', Auth::id());
+        $query = Recipe::where(function ($q) {
+            $q->where('user_id', Auth::id())
+            ->orWhere('is_public', true);
+        });
 
         $mealType = $request->input('meal_type');
         $currentRecipeId = $request->input('current_recipe_id');

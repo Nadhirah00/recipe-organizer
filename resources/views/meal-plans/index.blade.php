@@ -36,24 +36,6 @@
 
         </div>
 
-        <!-- Success Message -->
-
-        @if (session('success'))
-
-        <div class="flex items-start gap-3 bg-green-50 border border-green-200 text-green-700 rounded-2xl px-5 py-4 mb-6">
-
-            <span class="text-lg">
-                ✓
-            </span>
-
-            <p class="font-medium">
-                {{ session('success') }}
-            </p>
-
-        </div>
-
-        @endif
-
         <!-- Planner Controls -->
 
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 md:p-6 mb-6">
@@ -1111,6 +1093,12 @@ console.log(
                                 ${recipe.cooking_time} min
                                 ·
                                 ${escapeHtml(recipe.difficulty)}
+                            </p>
+
+                            <p class="text-xs text-gray-400 mt-1">
+                                ${recipe.user_id == {{ auth()->id() }}
+                                    ? '👨‍🍳 By You'
+                                    : '🌎 Public Recipe'}
                             </p>
 
                         </div>
