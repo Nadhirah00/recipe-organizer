@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Favorite;
 use App\Models\MealPlan;
 use App\Models\Recipe;
+use App\Models\ShoppingList;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
@@ -115,11 +116,17 @@ class DashboardController extends Controller
     |
     */
 
-    $shoppingTotal = session('shopping_list')
-        ? count(session('shopping_list'))
-        : 0;
+    $startOfWeek = now()->startOfWeek()->toDateString();
 
-    $shoppingCompleted = 0;
+    $shoppingItems = ShoppingList::where('user_id', auth()->id())
+        ->whereDate('week_start', $startOfWeek)
+        ->get();
+
+    $shoppingTotal = $shoppingItems->count();
+
+    $shoppingCompleted = $shoppingItems
+        ->where('is_checked', true)
+        ->count();
 
 
     /*
