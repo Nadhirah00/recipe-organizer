@@ -118,22 +118,6 @@
 <!-- Messages -->
 <!-- ========================================================= -->
 
-@if (session('success'))
-
-    <div class="flex items-start gap-3 bg-green-50 border border-green-200 text-green-700 rounded-2xl px-5 py-4 mb-6">
-
-        <span class="text-lg">
-            ✓
-        </span>
-
-        <p class="font-medium">
-            {{ session('success') }}
-        </p>
-
-    </div>
-
-@endif
-
 
 @if (session('error'))
 
