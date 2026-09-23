@@ -25,200 +25,55 @@
 <body class="min-h-screen bg-app-bg text-gray-800 antialiased">
 
 <!-- ========================================================= -->
-
-<!-- Navigation -->
-
+<!-- Header -->
 <!-- ========================================================= -->
 
-<nav class="sticky top-0 z-50 bg-gray-50/95 backdrop-blur-xl border-b border-gray-200/80">
+<header class="sticky top-0 z-40 bg-gray-50/95 backdrop-blur-xl border-b border-gray-200/80">
 
-<div class="max-w-7xl mx-auto px-6">
-
-    <div class="flex flex-wrap items-center justify-between gap-4 py-3.5">
-
+    <div class="h-16 flex items-center justify-between px-4 lg:px-6">
 
         <!-- ================================================= -->
-        <!-- Logo -->
+        <!-- Hamburger / Logo -->
         <!-- ================================================= -->
 
-        <a
-            href="{{ url('/dashboard') }}"
-            class="group flex items-center gap-3 shrink-0"
-        >
+        <div class="flex items-center gap-3">
 
-            <span
-                class="w-10 h-10 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center text-xl group-hover:scale-105 group-hover:shadow-sm transition"
+            <button
+                id="sidebar-toggle"
+                type="button"
+                class="lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-xl text-gray-600 hover:bg-gray-100 hover:text-orange-500 transition"
+                aria-label="Open sidebar"
             >
-                🍳
-            </span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
 
+            <a href="{{ url('/dashboard') }}" class="group flex items-center gap-3">
 
-            <span class="text-xl font-bold tracking-tight text-gray-800">
-
-                Recipe<span class="text-orange-500">
-                    Organizer
+                <span class="w-10 h-10 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center text-xl group-hover:scale-105 group-hover:shadow-sm transition">
+                    🍳
                 </span>
 
-            </span>
+                <span class="text-xl font-bold tracking-tight text-gray-800">
+                    Recipe<span class="text-orange-500">Organizer</span>
+                </span>
 
-        </a>
+            </a>
 
+        </div>
+
+        <!-- ================================================= -->
+        <!-- Account -->
+        <!-- ================================================= -->
 
         @auth
 
+            <div class="flex items-center gap-2">
 
-            <!-- ================================================= -->
-            <!-- Navigation -->
-            <!-- ================================================= -->
+                <div class="hidden sm:flex items-center gap-2">
 
-            <div class="flex flex-wrap items-center justify-center gap-1 text-sm">
-
-                @php
-
-                    $navItems = [
-
-                        [
-                            'url' => route('recipes.explore'),
-                            'icon' => '🌎',
-                            'label' => 'Explore Recipes',
-                            'pattern' => 'explore',
-                        ],
-
-                        [
-                            'url' => url('/recipes'),
-                            'icon' => '🍽️',
-                            'label' => 'My Recipes',
-                            'pattern' => 'recipes',
-                        ],
-
-                        [
-                            'url' => url('/favorites'),
-                            'icon' => '❤️',
-                            'label' => 'Favorites',
-                            'pattern' => 'favorites',
-                        ],
-
-                        [
-                            'url' => url('/meal-planner'),
-                            'icon' => '📅',
-                            'label' => 'Meal Planner',
-                            'pattern' => 'meal-planner',
-                        ],
-
-                        [
-                            'url' => url(
-                                '/shopping-list?week=' .
-                                now()
-                                    ->startOfWeek()
-                                    ->format('Y-m-d')
-                            ),
-                            'icon' => '🛒',
-                            'label' => 'Shopping List',
-                            'pattern' => 'shopping-list',
-                        ],
-
-                        [
-                            'url' => url('/preferences'),
-                            'icon' => '⚙️',
-                            'label' => 'Preferences',
-                            'pattern' => 'preferences',
-                        ],
-
-                    ];
-
-                @endphp
-
-
-                @foreach ($navItems as $item)
-
-                    @php
-
-                        $isActive = request()->is(
-                            $item['pattern'],
-                            $item['pattern'] . '/*'
-                        );
-
-                    @endphp
-
-
-                    <a
-                        href="{{ $item['url'] }}"
-                        class="
-                            relative
-                            inline-flex
-                            items-center
-                            gap-1.5
-                            px-3
-                            py-2
-                            rounded-xl
-                            font-medium
-                            transition
-                            {{ $isActive
-                                ? 'bg-orange-50 text-orange-600 font-semibold'
-                                : 'text-gray-600 hover:bg-gray-50 hover:text-orange-500'
-                            }}
-                        "
-                    >
-
-                        <span class="text-sm">
-                            {{ $item['icon'] }}
-                        </span>
-
-                        <span>
-                            {{ $item['label'] }}
-                        </span>
-
-
-                        @if ($isActive)
-
-                            <span
-                                class="absolute left-1/2 -translate-x-1/2 -bottom-1 w-1.5 h-1.5 rounded-full bg-orange-500"
-                            ></span>
-
-                        @endif
-
-                    </a>
-
-                @endforeach
-
-
-                <!-- ================================================= -->
-                <!-- Add Recipe -->
-                <!-- ================================================= -->
-
-                <a
-                    href="{{ url('/recipes/create') }}"
-                    class="inline-flex items-center gap-1.5 bg-orange-500 text-white px-4 py-2 rounded-xl font-semibold shadow-sm hover:bg-orange-600 hover:shadow-md transition ml-1"
-                >
-
-                    <span class="text-lg leading-none">
-                        +
-                    </span>
-
-                    <span>
-                        Add Recipe
-                    </span>
-
-                </a>
-
-
-                <!-- ================================================= -->
-                <!-- Divider -->
-                <!-- ================================================= -->
-
-                <div class="hidden lg:block h-7 w-px bg-gray-200 mx-2">
-                </div>
-
-
-                <!-- ================================================= -->
-                <!-- User -->
-                <!-- ================================================= -->
-
-                <div class="hidden lg:flex items-center gap-2">
-
-                    <div
-                        class="w-9 h-9 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center"
-                    >
+                    <div class="w-9 h-9 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center">
                         👤
                     </div>
 
@@ -228,16 +83,7 @@
 
                 </div>
 
-
-                <!-- ================================================= -->
-                <!-- Logout -->
-                <!-- ================================================= -->
-
-                <form
-                    action="{{ route('logout') }}"
-                    method="POST"
-                    class="ml-1"
-                >
+                <form action="{{ route('logout') }}" method="POST" class="ml-1">
 
                     @csrf
 
@@ -252,13 +98,7 @@
 
             </div>
 
-
         @else
-
-
-            <!-- ================================================= -->
-            <!-- Guest Navigation -->
-            <!-- ================================================= -->
 
             <div class="flex items-center gap-2">
 
@@ -268,7 +108,6 @@
                 >
                     Login
                 </a>
-
 
                 <a
                     href="{{ route('register') }}"
@@ -283,71 +122,403 @@
 
     </div>
 
-</div>
-
-</nav>
+</header>
 
 <!-- ========================================================= -->
-
-<!-- Main -->
-
+<!-- Sidebar Backdrop -->
 <!-- ========================================================= -->
 
-<main class="min-h-[calc(100vh-73px)]">
+<div id="sidebar-backdrop" class="fixed inset-0 z-40 bg-gray-900/40 backdrop-blur-sm hidden lg:hidden"></div>
+
+<div class="flex">
 
 <!-- ========================================================= -->
-<!-- Global Notifications -->
+<!-- Desktop Sidebar -->
 <!-- ========================================================= -->
 
-<div class="max-w-7xl mx-auto px-6 pt-6">
+@auth
 
-    @if (session('success'))
+<aside class="hidden lg:flex lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] w-64 bg-gray-50 border-r border-gray-200/80 flex-col shrink-0">
 
-        <div
-            class="flex items-start gap-3 bg-green-50 border border-green-200 text-green-700 rounded-2xl px-5 py-4 mb-6 shadow-sm"
-        >
+    <nav class="flex-1 overflow-y-auto px-3 py-4">
 
-            <span class="w-7 h-7 rounded-lg bg-green-100 flex items-center justify-center text-sm shrink-0">
-                ✓
-            </span>
+        @php
 
-            <p class="font-medium leading-6">
-                {{ session('success') }}
-            </p>
+            $navItems = [
+
+                [
+                    'url' => route('recipes.explore'),
+                    'icon' => '🌎',
+                    'label' => 'Explore Recipes',
+                    'pattern' => 'explore',
+                ],
+
+                [
+                    'url' => url('/recipes'),
+                    'icon' => '🍽️',
+                    'label' => 'My Recipes',
+                    'pattern' => 'recipes',
+                ],
+
+                [
+                    'url' => url('/favorites'),
+                    'icon' => '❤️',
+                    'label' => 'Favorites',
+                    'pattern' => 'favorites',
+                ],
+
+                [
+                    'url' => url('/meal-planner'),
+                    'icon' => '📅',
+                    'label' => 'Meal Planner',
+                    'pattern' => 'meal-planner',
+                ],
+
+                [
+                    'url' => url(
+                        '/shopping-list?week=' .
+                        now()
+                            ->startOfWeek()
+                            ->format('Y-m-d')
+                    ),
+                    'icon' => '🛒',
+                    'label' => 'Shopping List',
+                    'pattern' => 'shopping-list',
+                ],
+
+                [
+                    'url' => url('/preferences'),
+                    'icon' => '⚙️',
+                    'label' => 'Preferences',
+                    'pattern' => 'preferences',
+                ],
+
+            ];
+
+        @endphp
+
+        <div class="space-y-1">
+
+            @foreach ($navItems as $item)
+
+                @php
+
+                    $isActive = request()->is(
+                        $item['pattern'],
+                        $item['pattern'] . '/*'
+                    );
+
+                @endphp
+
+                <a
+                    href="{{ $item['url'] }}"
+                    class="
+                        relative
+                        flex
+                        items-center
+                        gap-3
+                        px-4
+                        py-2.5
+                        rounded-xl
+                        font-medium
+                        transition
+                        {{ $isActive
+                            ? 'bg-orange-50 text-orange-600 font-semibold'
+                            : 'text-gray-600 hover:bg-gray-100 hover:text-orange-500'
+                        }}
+                    "
+                >
+
+                    <span class="text-lg w-5 text-center shrink-0">
+                        {{ $item['icon'] }}
+                    </span>
+
+                    <span>
+                        {{ $item['label'] }}
+                    </span>
+
+                    @if ($isActive)
+
+                        <span
+                            class="absolute -left-3 top-1/2 -translate-y-1/2 w-1 h-7 rounded-full bg-orange-500"
+                        ></span>
+
+                    @endif
+
+                </a>
+
+            @endforeach
 
         </div>
 
-    @endif
+        <!-- ================================================= -->
+        <!-- Add Recipe -->
+        <!-- ================================================= -->
 
-
-    @if (session('error'))
-
-        <div
-            class="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 rounded-2xl px-5 py-4 mb-6 shadow-sm"
+        <a
+            href="{{ url('/recipes/create') }}"
+            class="mt-3 flex items-center gap-3 bg-orange-500 text-white px-4 py-2.5 rounded-xl font-semibold shadow-sm hover:bg-orange-600 hover:shadow-md transition"
         >
 
-            <span class="w-7 h-7 rounded-lg bg-red-100 flex items-center justify-center text-sm shrink-0">
-                ⚠️
+            <span class="text-lg leading-none w-5 text-center shrink-0">
+                +
             </span>
 
-            <p class="font-medium leading-6">
-                {{ session('error') }}
-            </p>
+            <span>
+                Add Recipe
+            </span>
+
+        </a>
+
+    </nav>
+
+</aside>
+
+@endauth
+
+    <!-- ========================================================= -->
+    <!-- Main -->
+    <!-- ========================================================= -->
+
+    <main class="flex-1 min-w-0 min-h-screen">
+
+        <!-- ========================================================= -->
+        <!-- Global Notifications -->
+        <!-- ========================================================= -->
+
+        <div class="max-w-7xl mx-auto px-6 pt-6">
+
+            @if (session('success'))
+
+                <div
+                    class="flex items-start gap-3 bg-green-50 border border-green-200 text-green-700 rounded-2xl px-5 py-4 mb-6 shadow-sm"
+                >
+
+                    <span class="w-7 h-7 rounded-lg bg-green-100 flex items-center justify-center text-sm shrink-0">
+                        ✓
+                    </span>
+
+                    <p class="font-medium leading-6">
+                        {{ session('success') }}
+                    </p>
+
+                </div>
+
+            @endif
+
+
+            @if (session('error'))
+
+                <div
+                    class="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 rounded-2xl px-5 py-4 mb-6 shadow-sm"
+                >
+
+                    <span class="w-7 h-7 rounded-lg bg-red-100 flex items-center justify-center text-sm shrink-0">
+                        ⚠️
+                    </span>
+
+                    <p class="font-medium leading-6">
+                        {{ session('error') }}
+                    </p>
+
+                </div>
+
+            @endif
 
         </div>
 
-    @endif
+
+        <!-- ========================================================= -->
+        <!-- Page Content -->
+        <!-- ========================================================= -->
+
+        @yield('content')
+
+    </main>
 
 </div>
 
-
 <!-- ========================================================= -->
-<!-- Page Content -->
+<!-- Mobile Sidebar -->
 <!-- ========================================================= -->
 
-@yield('content')
+@auth
 
-</main>
+<aside
+    id="sidebar"
+    class="fixed inset-y-0 left-0 z-50 w-64 bg-gray-50 border-r border-gray-200/80 flex flex-col -translate-x-full lg:hidden transition-transform duration-200"
+>
+
+    <!-- ================================================= -->
+    <!-- Logo -->
+    <!-- ================================================= -->
+
+    <div class="flex items-center justify-between px-5 py-5 border-b border-gray-200/80">
+
+        <a href="{{ url('/dashboard') }}" class="group flex items-center gap-3">
+
+            <span class="w-10 h-10 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center text-xl group-hover:scale-105 group-hover:shadow-sm transition">
+                🍳
+            </span>
+
+            <span class="text-xl font-bold tracking-tight text-gray-800">
+                Recipe<span class="text-orange-500">Organizer</span>
+            </span>
+
+        </a>
+
+        <button
+            id="sidebar-close"
+            type="button"
+            class="inline-flex items-center justify-center w-9 h-9 rounded-xl text-gray-500 hover:bg-gray-100 hover:text-orange-500 transition"
+            aria-label="Close sidebar"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+
+    </div>
+
+    <!-- ================================================= -->
+    <!-- Navigation -->
+    <!-- ================================================= -->
+
+    <nav class="flex-1 overflow-y-auto px-3 py-4">
+
+        @php
+
+            $navItems = [
+
+                [
+                    'url' => route('recipes.explore'),
+                    'icon' => '🌎',
+                    'label' => 'Explore Recipes',
+                    'pattern' => 'explore',
+                ],
+
+                [
+                    'url' => url('/recipes'),
+                    'icon' => '🍽️',
+                    'label' => 'My Recipes',
+                    'pattern' => 'recipes',
+                ],
+
+                [
+                    'url' => url('/favorites'),
+                    'icon' => '❤️',
+                    'label' => 'Favorites',
+                    'pattern' => 'favorites',
+                ],
+
+                [
+                    'url' => url('/meal-planner'),
+                    'icon' => '📅',
+                    'label' => 'Meal Planner',
+                    'pattern' => 'meal-planner',
+                ],
+
+                [
+                    'url' => url(
+                        '/shopping-list?week=' .
+                        now()
+                            ->startOfWeek()
+                            ->format('Y-m-d')
+                    ),
+                    'icon' => '🛒',
+                    'label' => 'Shopping List',
+                    'pattern' => 'shopping-list',
+                ],
+
+                [
+                    'url' => url('/preferences'),
+                    'icon' => '⚙️',
+                    'label' => 'Preferences',
+                    'pattern' => 'preferences',
+                ],
+
+            ];
+
+        @endphp
+
+        <div class="space-y-1">
+
+            @foreach ($navItems as $item)
+
+                @php
+
+                    $isActive = request()->is(
+                        $item['pattern'],
+                        $item['pattern'] . '/*'
+                    );
+
+                @endphp
+
+                <a
+                    href="{{ $item['url'] }}"
+                    class="
+                        relative
+                        flex
+                        items-center
+                        gap-3
+                        px-4
+                        py-2.5
+                        rounded-xl
+                        font-medium
+                        transition
+                        {{ $isActive
+                            ? 'bg-orange-50 text-orange-600 font-semibold'
+                            : 'text-gray-600 hover:bg-gray-100 hover:text-orange-500'
+                        }}
+                    "
+                >
+
+                    <span class="text-lg w-5 text-center shrink-0">
+                        {{ $item['icon'] }}
+                    </span>
+
+                    <span>
+                        {{ $item['label'] }}
+                    </span>
+
+                    @if ($isActive)
+
+                        <span
+                            class="absolute -left-3 top-1/2 -translate-y-1/2 w-1 h-7 rounded-full bg-orange-500"
+                        ></span>
+
+                    @endif
+
+                </a>
+
+            @endforeach
+
+        </div>
+
+        <!-- ================================================= -->
+        <!-- Add Recipe -->
+        <!-- ================================================= -->
+
+        <a
+            href="{{ url('/recipes/create') }}"
+            class="mt-3 flex items-center gap-3 bg-orange-500 text-white px-4 py-2.5 rounded-xl font-semibold shadow-sm hover:bg-orange-600 hover:shadow-md transition"
+        >
+
+            <span class="text-lg leading-none w-5 text-center shrink-0">
+                +
+            </span>
+
+            <span>
+                Add Recipe
+            </span>
+
+        </a>
+
+    </nav>
+
+</aside>
+
+@endauth
 
 </body>
 
