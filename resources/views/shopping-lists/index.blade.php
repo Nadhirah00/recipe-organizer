@@ -371,6 +371,7 @@
                         @foreach ($items as $item)
 
                             <div
+                                data-shopping-item="{{ $item->id }}"
                                 class="flex items-center gap-4 px-6 py-4 hover:bg-stone-50 transition"
                             >
 
@@ -388,7 +389,7 @@
 
                                     <input
                                         type="checkbox"
-                                        onchange="this.form.submit()"
+                                        onchange="toggleShoppingItem(this)"
                                         {{ $item->is_checked ? 'checked' : '' }}
                                         class="w-5 h-5 text-green-500 border-gray-300 rounded focus:ring-orange-400 cursor-pointer"
                                     >
@@ -399,6 +400,7 @@
                                 <!-- Ingredient -->
 
                                 <p
+                                    data-ingredient
                                     class="flex-1 min-w-0 font-medium transition
                                     {{ $item->is_checked
                                         ? 'text-gray-400 line-through'
@@ -497,5 +499,45 @@
 </div>
 
 </div>
+
+<script>
+    async function toggleShoppingItem(checkbox) {
+        const form = checkbox.closest('form');
+        const row = checkbox.closest('[data-shopping-item]');
+        const ingredient = row.querySelector('[data-ingredient]');
+
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                credentials: 'same-origin',
+                headers: {
+                    'Accept': 'text/html,application/xhtml+xml',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`Request failed: ${response.status}`);
+            }
+
+            // Update the appearance without reloading the page
+            if (checkbox.checked) {
+                ingredient.classList.remove('text-gray-800');
+                ingredient.classList.add('text-gray-400', 'line-through');
+            } else {
+                ingredient.classList.remove('text-gray-400', 'line-through');
+                ingredient.classList.add('text-gray-800');
+            }
+
+        } catch (error) {
+            console.error('Shopping item update failed:', error);
+
+            // Undo checkbox if request really failed
+            checkbox.checked = !checkbox.checked;
+
+            alert('Unable to update the shopping item.');
+        }
+    }
+</script>
 
 @endsection

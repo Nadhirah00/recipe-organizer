@@ -413,7 +413,10 @@ class ShoppingListController extends Controller
         ]);
 
 
-        return back();
+        return response()->json([
+            'success' => true,
+            'is_checked' => $item->is_checked,
+        ]);
     }
 
 
