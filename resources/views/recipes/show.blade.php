@@ -8,13 +8,6 @@
 
 <!-- Back -->
 
-<a
-    href="{{ url('/recipes') }}"
-    class="inline-flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-orange-500 transition mb-6"
->
-    ← Back to My Recipes
-</a>
-
 
 <!-- Recipe Card -->
 

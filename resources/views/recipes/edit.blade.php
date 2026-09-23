@@ -12,13 +12,6 @@
 
 <div class="mb-8">
 
-    <a
-        href="{{ url('/recipes') }}"
-        class="inline-flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-orange-500 transition"
-    >
-        ← Back to My Recipes
-    </a>
-
     <p class="text-xs font-semibold uppercase tracking-[0.15em] text-orange-500 mt-6">
         Recipe Collection
     </p>
