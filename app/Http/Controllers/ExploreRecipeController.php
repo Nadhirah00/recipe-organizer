@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Favorite;
 use App\Models\Recipe;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,7 +21,6 @@ class ExploreRecipeController extends Controller
             'browse'
         );
 
-
         /*
         |--------------------------------------------------------------------------
         | Browse Public Recipes
@@ -34,10 +32,11 @@ class ExploreRecipeController extends Controller
             'newest'
         );
 
-
-        $publicQuery = Recipe::with('user')
+        $publicQuery = Recipe::with([
+            'user',
+            'favorites',
+        ])
             ->where('is_public', true);
-
 
         /*
         |--------------------------------------------------------------------------
@@ -54,22 +53,21 @@ class ExploreRecipeController extends Controller
                 $q->where(
                     'name',
                     'like',
-                    '%' . $search . '%'
+                    '%'.$search.'%'
                 )
-                ->orWhere(
-                    'description',
-                    'like',
-                    '%' . $search . '%'
-                )
-                ->orWhere(
-                    'ingredients',
-                    'like',
-                    '%' . $search . '%'
-                );
+                    ->orWhere(
+                        'description',
+                        'like',
+                        '%'.$search.'%'
+                    )
+                    ->orWhere(
+                        'ingredients',
+                        'like',
+                        '%'.$search.'%'
+                    );
 
             });
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -84,7 +82,6 @@ class ExploreRecipeController extends Controller
                 $request->category
             );
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -103,7 +100,6 @@ class ExploreRecipeController extends Controller
 
                 break;
 
-
             case 'name_asc':
 
                 $publicQuery->orderBy(
@@ -112,7 +108,6 @@ class ExploreRecipeController extends Controller
                 );
 
                 break;
-
 
             case 'name_desc':
 
@@ -123,7 +118,6 @@ class ExploreRecipeController extends Controller
 
                 break;
 
-
             case 'time_asc':
 
                 $publicQuery->orderBy(
@@ -133,7 +127,6 @@ class ExploreRecipeController extends Controller
 
                 break;
 
-
             case 'time_desc':
 
                 $publicQuery->orderBy(
@@ -142,7 +135,6 @@ class ExploreRecipeController extends Controller
                 );
 
                 break;
-
 
             case 'newest':
 
@@ -158,11 +150,9 @@ class ExploreRecipeController extends Controller
                 break;
         }
 
-
         $publicRecipes = $publicQuery
             ->paginate(12)
             ->withQueryString();
-
 
         /*
         |--------------------------------------------------------------------------
@@ -174,7 +164,6 @@ class ExploreRecipeController extends Controller
 
         $ingredientResults = collect();
 
-
         if ($request->filled('ingredients')) {
 
             $userIngredients =
@@ -182,8 +171,7 @@ class ExploreRecipeController extends Controller
                     $request->input('ingredients')
                 );
 
-
-            if (!empty($userIngredients)) {
+            if (! empty($userIngredients)) {
 
                 /*
                 |--------------------------------------------------------------------------
@@ -204,14 +192,13 @@ class ExploreRecipeController extends Controller
                             'user_id',
                             Auth::id()
                         )
-                        ->orWhere(
-                            'is_public',
-                            true
-                        );
+                            ->orWhere(
+                                'is_public',
+                                true
+                            );
 
                     })
                     ->get();
-
 
                 $ingredientResults = $recipes
 
@@ -224,27 +211,21 @@ class ExploreRecipeController extends Controller
                                 $recipe->ingredients
                             );
 
-
                         if (empty($recipeIngredients)) {
                             return null;
                         }
 
-
                         $matched = [];
                         $missing = [];
 
-
                         foreach (
-                            $recipeIngredients
-                            as $recipeIngredient
+                            $recipeIngredients as $recipeIngredient
                         ) {
 
                             $isMatched = false;
 
-
                             foreach (
-                                $userIngredients
-                                as $userIngredient
+                                $userIngredients as $userIngredient
                             ) {
 
                                 if (
@@ -260,7 +241,6 @@ class ExploreRecipeController extends Controller
                                 }
                             }
 
-
                             if ($isMatched) {
 
                                 $matched[] =
@@ -273,16 +253,13 @@ class ExploreRecipeController extends Controller
                             }
                         }
 
-
                         $totalIngredients =
                             count(
                                 $recipeIngredients
                             );
 
-
                         $matchedCount =
                             count($matched);
-
 
                         $percentage =
                             $totalIngredients > 0
@@ -294,7 +271,6 @@ class ExploreRecipeController extends Controller
                                 )
                                 : 0;
 
-
                         /*
                         |--------------------------------------------------------------------------
                         | Only show recipes with at least one match
@@ -305,25 +281,18 @@ class ExploreRecipeController extends Controller
                             return null;
                         }
 
-
                         return [
-                            'recipe' =>
-                                $recipe,
+                            'recipe' => $recipe,
 
-                            'percentage' =>
-                                $percentage,
+                            'percentage' => $percentage,
 
-                            'matched' =>
-                                $matched,
+                            'matched' => $matched,
 
-                            'missing' =>
-                                $missing,
+                            'missing' => $missing,
 
-                            'matched_count' =>
-                                $matchedCount,
+                            'matched_count' => $matchedCount,
 
-                            'total_count' =>
-                                $totalIngredients,
+                            'total_count' => $totalIngredients,
                         ];
                     })
 
@@ -337,7 +306,6 @@ class ExploreRecipeController extends Controller
             }
         }
 
-
         return view(
             'recipes.explore',
             compact(
@@ -350,7 +318,6 @@ class ExploreRecipeController extends Controller
         );
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | Normalize User Ingredients
@@ -362,13 +329,11 @@ class ExploreRecipeController extends Controller
     ): array {
 
         $items = preg_split(
-            '/[\r\n,]+/',
+            '/[\r\n,;\/&|]+/',
             $input
         );
 
-
         $normalized = [];
-
 
         foreach ($items as $item) {
 
@@ -378,12 +343,10 @@ class ExploreRecipeController extends Controller
                 continue;
             }
 
-
             $item =
                 $this->normalizeIngredientName(
                     $item
                 );
-
 
             if ($item !== '') {
 
@@ -392,12 +355,10 @@ class ExploreRecipeController extends Controller
             }
         }
 
-
         return array_values(
             $normalized
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -409,19 +370,16 @@ class ExploreRecipeController extends Controller
         ?string $ingredients
     ): array {
 
-        if (!$ingredients) {
+        if (! $ingredients) {
             return [];
         }
-
 
         $lines = preg_split(
             '/\r\n|\r|\n/',
             $ingredients
         );
 
-
         $normalized = [];
-
 
         foreach ($lines as $line) {
 
@@ -431,7 +389,6 @@ class ExploreRecipeController extends Controller
                 continue;
             }
 
-
             /*
             |--------------------------------------------------------------------------
             | Remove quantities and units
@@ -439,28 +396,26 @@ class ExploreRecipeController extends Controller
             */
 
             $line = preg_replace(
-                '/^\d+(?:[\/\.]\d+)?\s*(?:' .
-                'tablespoons?|tbsp|' .
-                'teaspoons?|tsp|' .
-                'cups?|' .
-                'grams?|g|' .
-                'kilograms?|kg|' .
-                'milliliters?|ml|' .
-                'liters?|l|' .
-                'pieces?|pcs|' .
-                'cloves?|' .
-                'slices?' .
+                '/^\d+(?:[\/\.]\d+)?\s*(?:'.
+                'tablespoons?|tbsp|'.
+                'teaspoons?|tsp|'.
+                'cups?|'.
+                'grams?|g|'.
+                'kilograms?|kg|'.
+                'milliliters?|ml|'.
+                'liters?|l|'.
+                'pieces?|pcs|'.
+                'cloves?|'.
+                'slices?'.
                 ')\s*(?:of\s+)?/i',
                 '',
                 $line
             );
 
-
             $line =
                 $this->normalizeIngredientName(
                     trim($line)
                 );
-
 
             if ($line !== '') {
 
@@ -469,12 +424,10 @@ class ExploreRecipeController extends Controller
             }
         }
 
-
         return array_values(
             $normalized
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -489,7 +442,6 @@ class ExploreRecipeController extends Controller
         $ingredient =
             strtolower(trim($ingredient));
 
-
         $ingredient = str_replace(
             [
                 '-',
@@ -497,12 +449,15 @@ class ExploreRecipeController extends Controller
                 '(',
                 ')',
                 ',',
-                '.'
+                '.',
+                '/',
+                ';',
+                '&',
+                '|',
             ],
             ' ',
             $ingredient
         );
-
 
         $ingredient = preg_replace(
             '/\b(
@@ -529,104 +484,67 @@ class ExploreRecipeController extends Controller
             $ingredient
         );
 
-
         $ingredient = preg_replace(
             '/\s+/',
             ' ',
             $ingredient
         );
 
-
         $ingredient =
             trim($ingredient);
 
-
         $specialCases = [
 
-            'chicken breasts'
-                => 'chicken',
+            'chicken breasts' => 'chicken',
 
-            'chicken breast'
-                => 'chicken',
+            'chicken breast' => 'chicken',
 
-            'chicken pieces'
-                => 'chicken',
+            'chicken pieces' => 'chicken',
 
-            'chicken fillet'
-                => 'chicken',
+            'chicken fillet' => 'chicken',
 
-            'chicken fillets'
-                => 'chicken',
+            'chicken fillets' => 'chicken',
 
+            'eggs' => 'egg',
 
-            'eggs'
-                => 'egg',
+            'cooked rice' => 'rice',
 
+            'white rice' => 'rice',
 
-            'cooked rice'
-                => 'rice',
+            'brown rice' => 'rice',
 
-            'white rice'
-                => 'rice',
+            'tomatoes' => 'tomato',
 
-            'brown rice'
-                => 'rice',
+            'onions' => 'onion',
 
+            'potatoes' => 'potato',
 
-            'tomatoes'
-                => 'tomato',
+            'carrots' => 'carrot',
 
-            'onions'
-                => 'onion',
+            'mushrooms' => 'mushroom',
 
-            'potatoes'
-                => 'potato',
+            'peppers' => 'pepper',
 
-            'carrots'
-                => 'carrot',
+            'bell peppers' => 'bell pepper',
 
-            'mushrooms'
-                => 'mushroom',
+            'bell pepper' => 'pepper',
 
-            'peppers'
-                => 'pepper',
+            'bananas' => 'banana',
 
-            'bell peppers'
-                => 'bell pepper',
+            'strawberries' => 'strawberry',
 
-            'bell pepper'
-                => 'pepper',
+            'garlic cloves' => 'garlic',
 
+            'clove garlic' => 'garlic',
 
-            'bananas'
-                => 'banana',
+            'parsley leaves' => 'parsley',
 
-            'strawberries'
-                => 'strawberry',
+            'all purpose flour' => 'flour',
 
+            'all-purpose flour' => 'flour',
 
-            'garlic cloves'
-                => 'garlic',
-
-            'clove garlic'
-                => 'garlic',
-
-
-            'parsley leaves'
-                => 'parsley',
-
-
-            'all purpose flour'
-                => 'flour',
-
-            'all-purpose flour'
-                => 'flour',
-
-
-            'spaghetti'
-                => 'pasta',
+            'spaghetti' => 'pasta',
         ];
-
 
         if (
             isset(
@@ -634,10 +552,8 @@ class ExploreRecipeController extends Controller
             )
         ) {
 
-            return
-                $specialCases[$ingredient];
+            return $specialCases[$ingredient];
         }
-
 
         if (
             str_ends_with(
@@ -653,9 +569,8 @@ class ExploreRecipeController extends Controller
                     $ingredient,
                     0,
                     -3
-                ) . 'y';
+                ).'y';
         }
-
 
         if (
             str_ends_with(
@@ -674,14 +589,13 @@ class ExploreRecipeController extends Controller
                 );
         }
 
-
         if (
             str_ends_with(
                 $ingredient,
                 's'
             )
             &&
-            !str_ends_with(
+            ! str_ends_with(
                 $ingredient,
                 'ss'
             )
@@ -697,10 +611,8 @@ class ExploreRecipeController extends Controller
                 );
         }
 
-
         return $ingredient;
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -718,12 +630,10 @@ class ExploreRecipeController extends Controller
                 $userIngredient
             );
 
-
         $recipeIngredient =
             $this->normalizeIngredientName(
                 $recipeIngredient
             );
-
 
         if (
             $userIngredient === '' ||
@@ -731,7 +641,6 @@ class ExploreRecipeController extends Controller
         ) {
             return false;
         }
-
 
         if (
             $userIngredient ===
@@ -741,14 +650,13 @@ class ExploreRecipeController extends Controller
             return true;
         }
 
-
         if (
             str_contains(
-                ' ' .
-                $recipeIngredient .
+                ' '.
+                $recipeIngredient.
                 ' ',
-                ' ' .
-                $userIngredient .
+                ' '.
+                $userIngredient.
                 ' '
             )
         ) {
@@ -756,21 +664,19 @@ class ExploreRecipeController extends Controller
             return true;
         }
 
-
         if (
             str_contains(
-                ' ' .
-                $userIngredient .
+                ' '.
+                $userIngredient.
                 ' ',
-                ' ' .
-                $recipeIngredient .
+                ' '.
+                $recipeIngredient.
                 ' '
             )
         ) {
 
             return true;
         }
-
 
         return false;
     }

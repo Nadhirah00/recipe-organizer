@@ -72,6 +72,7 @@
 
                 <p class="text-sm text-gray-500 mt-1">
                     Enter the ingredients you currently have and we'll find recipes that match.
+                    Separate them with commas, one per line, or slashes — e.g. <span class="font-semibold text-gray-600">rice / chicken</span>.
                 </p>
             </div>
 
@@ -90,11 +91,44 @@
                 <textarea
                     name="ingredients"
                     rows="4"
-                    placeholder="Example: chicken, egg, rice, garlic"
+                    placeholder="Chicken
+Rice
+Egg
+Garlic"
                     class="w-full border border-gray-200 rounded-xl px-4 py-3 bg-gray-50
                            focus:bg-white focus:outline-none focus:ring-2
                            focus:ring-orange-400 focus:border-orange-400 transition"
                 >{{ request('ingredients') }}</textarea>
+
+
+                {{-- Quick examples --}}
+                <div class="mt-3">
+
+                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                        Quick examples · click to add
+                    </p>
+
+                    <div class="flex flex-wrap gap-2">
+
+                        @foreach (['Chicken', 'Rice', 'Egg', 'Garlic', 'Onion', 'Tomato'] as $example)
+
+                            <button
+                                type="button"
+                                class="quick-ingredient inline-flex items-center gap-1
+                                       bg-gray-100 text-gray-600 border border-gray-200
+                                       px-3 py-1.5 rounded-full text-sm font-medium
+                                       hover:bg-orange-50 hover:text-orange-600
+                                       hover:border-orange-200 transition"
+                                data-ingredient="{{ $example }}"
+                            >
+                                + {{ $example }}
+                            </button>
+
+                        @endforeach
+
+                    </div>
+
+                </div>
 
 
                 <div class="flex flex-col sm:flex-row gap-3 mt-4">
@@ -471,9 +505,106 @@
                         No Matching Recipes
                     </h2>
 
-                    <p class="text-gray-500 mt-3 max-w-md mx-auto">
-                        Try adding another ingredient or using a more general ingredient name.
+                    <p class="text-gray-500 mt-3 max-w-lg mx-auto leading-7">
+                        We compared your ingredients against <span class="font-semibold text-gray-600">your recipes and public recipes from the community</span>,
+                        but nothing matched yet.
                     </p>
+
+
+                    {{-- Tips --}}
+                    <div
+                        class="mt-8 bg-gray-50 border border-gray-100 rounded-2xl
+                               p-5 text-left max-w-lg mx-auto"
+                    >
+
+                        <p class="text-sm font-bold text-gray-800 mb-3">
+                            💡 How to get better matches
+                        </p>
+
+                        <ul class="space-y-2 text-sm text-gray-600">
+
+                            <li class="flex items-start gap-2">
+                                <span>•</span>
+                                <span>Use simple, general names — <span class="font-semibold text-gray-700">chicken</span>, <span class="font-semibold text-gray-700">rice</span>, <span class="font-semibold text-gray-700">egg</span> — instead of "boneless skinless chicken breast".</span>
+                            </li>
+
+                            <li class="flex items-start gap-2">
+                                <span>•</span>
+                                <span>Separate ingredients with commas, one per line, or slashes: <span class="font-semibold text-gray-700">rice / chicken</span>.</span>
+                            </li>
+
+                            <li class="flex items-start gap-2">
+                                <span>•</span>
+                                <span>You're searching your recipes plus recipes shared publicly by other users.</span>
+                            </li>
+
+                        </ul>
+
+                    </div>
+
+
+                    {{-- Try an example --}}
+                    <div class="mt-8">
+
+                        <p class="text-sm font-semibold text-gray-600 mb-3">
+                            Or try a quick example ingredient
+                        </p>
+
+                        <div class="flex flex-wrap justify-center gap-2">
+
+                            @foreach (['Chicken', 'Rice', 'Egg', 'Garlic'] as $example)
+
+                                <form
+                                    action="{{ route('recipes.explore') }}"
+                                    method="GET"
+                                >
+
+                                    <input type="hidden" name="mode" value="ingredients">
+
+                                    <input type="hidden" name="ingredients" value="{{ $example }}">
+
+                                    <button
+                                        type="submit"
+                                        class="inline-flex items-center gap-1
+                                               bg-gray-100 text-gray-600 border border-gray-200
+                                               px-4 py-2 rounded-full text-sm font-medium
+                                               hover:bg-orange-50 hover:text-orange-600
+                                               hover:border-orange-200 transition"
+                                    >
+                                        + {{ $example }}
+                                    </button>
+
+                                </form>
+
+                            @endforeach
+
+                        </div>
+
+                    </div>
+
+
+                    {{-- Fallback links --}}
+                    <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+
+                        <a
+                            href="{{ route('recipes.explore', ['mode' => 'browse']) }}"
+                            class="inline-flex items-center justify-center gap-2
+                                   bg-orange-500 text-white px-6 py-3 rounded-xl
+                                   font-semibold hover:bg-orange-600 transition"
+                        >
+                            🌎 Browse All Public Recipes
+                        </a>
+
+                        <a
+                            href="{{ route('recipes.explore', ['mode' => 'ingredients']) }}"
+                            class="inline-flex items-center justify-center gap-2
+                                   bg-gray-100 text-gray-700 px-6 py-3 rounded-xl
+                                   font-semibold hover:bg-gray-200 transition"
+                        >
+                            ← Search Again
+                        </a>
+
+                    </div>
 
                 </div>
 
@@ -841,26 +972,60 @@
 
                                     @auth
 
-                                        <form
-                                            action="{{ url('/recipes/' . $recipe->id . '/favorite') }}"
-                                            method="POST"
-                                        >
+                                        @if (
+                                            $recipe->favorites
+                                                ->contains(
+                                                    fn ($favorite) =>
+                                                        $favorite->user_id === auth()->id()
+                                                )
+                                        )
 
-                                            @csrf
-
-                                            <button
-                                                type="submit"
-                                                class="w-full inline-flex items-center
-                                                       justify-center gap-1
-                                                       border border-orange-200
-                                                       text-orange-500 py-2.5 rounded-xl
-                                                       font-semibold
-                                                       hover:bg-orange-50 transition"
+                                            <form
+                                                action="{{ url('/recipes/' . $recipe->id . '/favorite') }}"
+                                                method="POST"
                                             >
-                                                ♡ Favorite
-                                            </button>
 
-                                        </form>
+                                                @csrf
+                                                @method('DELETE')
+
+                                                <button
+                                                    type="submit"
+                                                    class="w-full inline-flex items-center
+                                                           justify-center gap-1
+                                                           border border-red-200
+                                                           text-red-500 py-2.5 rounded-xl
+                                                           font-semibold
+                                                           hover:bg-red-50 transition"
+                                                >
+                                                    ❤️ Favorited
+                                                </button>
+
+                                            </form>
+
+                                        @else
+
+                                            <form
+                                                action="{{ url('/recipes/' . $recipe->id . '/favorite') }}"
+                                                method="POST"
+                                            >
+
+                                                @csrf
+
+                                                <button
+                                                    type="submit"
+                                                    class="w-full inline-flex items-center
+                                                           justify-center gap-1
+                                                           border border-orange-200
+                                                           text-orange-500 py-2.5 rounded-xl
+                                                           font-semibold
+                                                           hover:bg-orange-50 transition"
+                                                >
+                                                    ♡ Favorite
+                                                </button>
+
+                                            </form>
+
+                                        @endif
 
                                     @endauth
 
@@ -931,5 +1096,215 @@
     @endif
 
 </div>
+
+<!-- ========================================================= -->
+<!-- Add to Meal Plan Modal -->
+<!-- ========================================================= -->
+
+<div
+    id="exploreMealModal"
+    class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 px-4"
+>
+
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+
+        <div class="flex items-center justify-between mb-5">
+
+            <div>
+
+                <h2 class="text-2xl font-bold text-gray-800">
+                    Add to Meal Plan
+                </h2>
+
+                <p
+                    id="exploreMealRecipeName"
+                    class="text-gray-500 mt-1"
+                ></p>
+
+            </div>
+
+            <button
+                type="button"
+                onclick="closeExploreMealModal()"
+                class="text-gray-400 hover:text-gray-700 text-2xl"
+            >
+                &times;
+            </button>
+
+        </div>
+
+
+        <form
+            action="{{ url('/meal-planner') }}"
+            method="POST"
+        >
+
+            @csrf
+
+            <input
+                type="hidden"
+                name="recipe_id"
+                id="exploreRecipeId"
+            >
+
+
+            <div class="mb-5">
+
+                <label
+                    for="exploreMealDate"
+                    class="block text-sm font-semibold text-gray-700 mb-2"
+                >
+                    Date
+                </label>
+
+                <input
+                    type="date"
+                    name="date"
+                    id="exploreMealDate"
+                    value="{{ now()->format('Y-m-d') }}"
+                    min="{{ now()->format('Y-m-d') }}"
+                    class="w-full border border-gray-300 rounded-lg px-4 py-3"
+                    required
+                >
+
+            </div>
+
+
+            <div class="mb-6">
+
+                <label
+                    for="exploreMealType"
+                    class="block text-sm font-semibold text-gray-700 mb-2"
+                >
+                    Meal Type
+                </label>
+
+                <p class="text-xs text-gray-400 mt-2">
+                    The meal type is based on the recipe category, but you can change it.
+                </p>
+
+                <select
+                    name="meal_type"
+                    id="exploreMealType"
+                    class="w-full border border-gray-300 rounded-lg px-4 py-3"
+                    required
+                >
+
+                    <option value="Breakfast">
+                        🍳 Breakfast
+                    </option>
+
+                    <option value="Lunch">
+                        🍱 Lunch
+                    </option>
+
+                    <option value="Dinner">
+                        🍽️ Dinner
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="flex gap-3">
+
+                <button
+                    type="button"
+                    onclick="closeExploreMealModal()"
+                    class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="submit"
+                    class="flex-1 bg-orange-500 text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition"
+                >
+                    Add to Plan
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    document.querySelectorAll('.quick-ingredient').forEach(button => {
+
+        button.addEventListener('click', () => {
+
+            const textarea = document.querySelector(
+                'textarea[name="ingredients"]'
+            );
+
+            if (!textarea) {
+                return;
+            }
+
+            const ingredient = button.dataset.ingredient;
+
+            const current = textarea.value.trim();
+
+            if (current === '') {
+
+                textarea.value = ingredient;
+
+            } else if (
+                current
+                    .toLowerCase()
+                    .split(/[\r\n,;\/&|]+/)
+                    .map(item => item.trim())
+                    .filter(Boolean)
+                    .some(item => item.toLowerCase() === ingredient.toLowerCase())
+            ) {
+
+                return;
+
+            } else {
+
+                textarea.value = current + ', ' + ingredient;
+
+            }
+
+            textarea.focus();
+        });
+
+    });
+
+
+    function openExploreMealModal(recipeId, recipeName, category)
+    {
+        document.getElementById('exploreRecipeId').value = recipeId;
+
+        document.getElementById('exploreMealRecipeName').innerText = recipeName;
+
+        const mealType = document.getElementById('exploreMealType');
+
+        const validMealTypes = ['Breakfast', 'Lunch', 'Dinner'];
+
+        mealType.value = validMealTypes.includes(category) ? category : 'Lunch';
+
+        const modal = document.getElementById('exploreMealModal');
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+
+    function closeExploreMealModal()
+    {
+        const modal = document.getElementById('exploreMealModal');
+
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+</script>
 
 @endsection
