@@ -14,11 +14,11 @@
 
         <div>
 
-            <p class="text-orange-500 font-semibold mb-2">
+            <p class="text-xs font-semibold uppercase tracking-[0.15em] text-orange-500">
                 🌎 Explore the community
             </p>
 
-            <h1 class="text-4xl font-bold text-gray-800">
+            <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-gray-800">
                 Discover Recipes
             </h1>
 

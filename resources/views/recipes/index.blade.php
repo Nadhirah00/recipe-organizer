@@ -16,7 +16,7 @@
                 Your Collection
             </p>
 
-            <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-gray-800 mt-1">
+            <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-gray-800 mt-1">
                 My Recipes
             </h1>
 
@@ -393,7 +393,7 @@
 
         <!-- Recipe Grid -->
 
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
             @foreach ($recipes as $recipe)
 
@@ -425,7 +425,7 @@
 
                             <div class="w-full h-full flex items-center justify-center">
 
-                                <span class="text-7xl">
+                                <span class="text-6xl">
                                     🍳
                                 </span>
 
@@ -436,23 +436,19 @@
 
                         <!-- Visibility Badge -->
 
-                        <div class="absolute top-4 left-4">
+                        @if ($recipe->is_public)
 
-                            @if ($recipe->is_public)
+                            <span class="absolute top-4 left-4 inline-flex items-center gap-1 bg-white/95 backdrop-blur text-green-700 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm">
+                                🌎 Public
+                            </span>
 
-                                <span class="inline-flex items-center gap-1.5 bg-white/95 backdrop-blur text-green-700 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm">
-                                    🌎 Public
-                                </span>
+                        @else
 
-                            @else
+                            <span class="absolute top-4 left-4 inline-flex items-center gap-1 bg-white/95 backdrop-blur text-gray-600 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm">
+                                🔒 Private
+                            </span>
 
-                                <span class="inline-flex items-center gap-1.5 bg-white/95 backdrop-blur text-gray-600 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm">
-                                    🔒 Private
-                                </span>
-
-                            @endif
-
-                        </div>
+                        @endif
 
 
                         <!-- Card Actions -->
@@ -508,7 +504,7 @@
 
                         <!-- Name -->
 
-                        <h3 class="text-xl font-bold text-gray-800 leading-snug group-hover:text-orange-600 transition">
+                        <h3 class="text-xl font-bold text-gray-800 group-hover:text-orange-600 transition">
                             {{ $recipe->name }}
                         </h3>
 
@@ -524,43 +520,31 @@
 
                         <!-- Description -->
 
-                        <div class="mt-3 min-h-[48px]">
+                        @if ($recipe->description)
 
-                            @if ($recipe->description)
+                            <p class="text-sm text-gray-500 mt-3 line-clamp-2">
+                                {{ $recipe->description }}
+                            </p>
 
-                                <p class="text-sm text-gray-500 leading-6 line-clamp-2">
-                                    {{ $recipe->description }}
-                                </p>
-
-                            @else
-
-                                <p class="text-sm text-gray-400 italic">
-                                    No description provided.
-                                </p>
-
-                            @endif
-
-                        </div>
+                        @endif
 
                         <!-- Details -->
 
-                        <div class="flex flex-wrap gap-2 mt-5">
+                        <div class="flex flex-wrap gap-2 mt-4">
 
-                            <span class="inline-flex items-center gap-1.5 bg-orange-50 text-orange-700 px-3 py-1.5 rounded-full text-xs font-semibold">
+                            <span class="bg-orange-50 text-orange-700 px-3 py-1.5 rounded-full text-xs font-semibold">
                                 🏷 {{ $recipe->category }}
                             </span>
 
-                            <span class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-xs font-semibold">
+                            <span class="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-xs font-semibold">
                                 ⏱ {{ $recipe->cooking_time }} min
                             </span>
 
-                            <span class="inline-flex items-center gap-1.5 bg-purple-50 text-purple-700 px-3 py-1.5 rounded-full text-xs font-semibold">
+                            <span class="bg-purple-50 text-purple-700 px-3 py-1.5 rounded-full text-xs font-semibold">
                                 ⭐ {{ $recipe->difficulty }}
                             </span>
 
                         </div>
-
-                        
 
                     </div>
 

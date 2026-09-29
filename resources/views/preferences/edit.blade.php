@@ -16,7 +16,7 @@
         Personalization
     </p>
 
-    <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-gray-800 mt-1">
+    <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-gray-800 mt-1">
         ⚙️ Meal Preferences
     </h1>
 

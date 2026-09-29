@@ -4,685 +4,556 @@
 
 @section('content')
 
-<div class="max-w-4xl mx-auto px-6 py-10">
+@php
+    $field = 'w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800
+              placeholder-gray-400 bg-gray-50 focus:bg-white focus:outline-none
+              focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition';
 
-<!-- ========================================================= -->
-<!-- Header -->
-<!-- ========================================================= -->
+    $fieldInvalid = 'border-red-300 bg-red-50/40 focus:ring-red-400 focus:border-red-400';
 
-<div class="mb-8">
+    $label = 'block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5';
 
+    $card = 'bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6';
 
-    <p class="text-xs font-semibold uppercase tracking-[0.15em] text-orange-500 mt-6">
-        Recipe Collection
-    </p>
+    $sectionTitle = 'text-lg font-bold text-gray-800';
 
-    <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-gray-800 mt-1">
-        Add New Recipe
-    </h1>
+    $sectionHint = 'text-sm text-gray-500 mt-1 mb-4';
 
-    <p class="text-gray-500 mt-2 max-w-2xl">
-        Add your recipe details below and save it to your collection.
-    </p>
+    $step = 'text-xs font-semibold uppercase tracking-[0.15em] text-orange-500';
+@endphp
 
-</div>
+<div class="max-w-5xl mx-auto px-4 sm:px-6 py-6 md:py-8">
 
-<!-- ========================================================= -->
-<!-- Validation Errors -->
-<!-- ========================================================= -->
+    <!-- Header -->
 
-@if ($errors->any())
+    <div class="mb-6">
 
-    <div class="bg-red-50 border border-red-200 rounded-2xl p-5 mb-6">
+        <p class="{{ $step }}">
+            Recipe Collection
+        </p>
 
-        <div class="flex items-center gap-2 text-red-700 font-semibold">
+        <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-gray-800 mt-1">
+            Add Recipe
+        </h1>
 
-            <span>
-                ⚠️
-            </span>
-
-            <span>
-                Please fix the following:
-            </span>
-
-        </div>
-
-        <ul class="list-disc list-inside text-sm text-red-600 mt-3 space-y-1">
-
-            @foreach ($errors->all() as $error)
-
-                <li>
-                    {{ $error }}
-                </li>
-
-            @endforeach
-
-        </ul>
+        <p class="text-sm text-gray-500 mt-2">
+            Capture a recipe once, then reuse it in your meal plan and shopping list.
+        </p>
 
     </div>
 
-@endif
 
-<!-- ========================================================= -->
-<!-- Form -->
-<!-- ========================================================= -->
+    <!-- Validation Errors -->
 
-<form
-    action="{{ url('/recipes') }}"
-    method="POST"
-    enctype="multipart/form-data"
-    class="space-y-6"
->
+    @if ($errors->any())
 
-    @csrf
+        <div class="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6">
 
-    <!-- ===================================================== -->
-    <!-- Basic Information -->
-    <!-- ===================================================== -->
+            <div class="flex items-center gap-2 text-sm font-semibold text-red-700">
 
-    <section class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
+                <span>⚠️</span>
 
-        <div class="mb-6">
+                <span>Please fix the following:</span>
 
-            <p class="text-xs font-semibold uppercase tracking-[0.15em] text-orange-500">
-                Step 1
-            </p>
+            </div>
 
-            <h2 class="text-2xl font-bold text-gray-800 mt-1">
-                Basic Information
-            </h2>
+            <ul class="list-disc list-inside text-sm text-red-600 mt-2 space-y-1">
 
-            <p class="text-sm text-gray-500 mt-1">
-                Start with the name, description, and image.
-            </p>
+                @foreach ($errors->all() as $error)
+
+                    <li>{{ $error }}</li>
+
+                @endforeach
+
+            </ul>
 
         </div>
 
-        <!-- Recipe Name -->
+    @endif
 
-        <div class="mb-6">
 
-            <label
-                for="name"
-                class="block text-sm font-semibold text-gray-700 mb-2"
-            >
-                Recipe Name
-            </label>
+    <!-- Form -->
 
-            <input
-                type="text"
-                id="name"
-                name="name"
-                value="{{ old('name') }}"
-                placeholder="e.g. Chicken Teriyaki"
-                class="w-full border border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition"
-            >
+    <form
+        action="{{ url('/recipes') }}"
+        method="POST"
+        enctype="multipart/form-data"
+        class="space-y-6"
+    >
 
-        </div>
+        @csrf
 
-        <!-- Description -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        <div class="mb-6">
+            <!-- Basics -->
 
-            <label
-                for="description"
-                class="block text-sm font-semibold text-gray-700 mb-2"
-            >
-                Description
-            </label>
+            <section class="{{ $card }}">
 
-            <textarea
-                id="description"
-                name="description"
-                rows="3"
-                placeholder="Briefly describe your recipe..."
-                class="w-full border border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition"
-            >{{ old('description') }}</textarea>
+                <p class="{{ $step }}">
+                    Step 1
+                </p>
 
-        </div>
+                <h2 class="{{ $sectionTitle }} mt-1">
+                    Basics
+                </h2>
 
-        <!-- Recipe Image -->
+                <p class="{{ $sectionHint }}">
+                    The name and summary shown on your recipe card.
+                </p>
 
-        <div>
+                <div class="mb-4">
 
-            <label class="block text-sm font-semibold text-gray-700 mb-2">
-                🖼️ Recipe Image
-            </label>
+                    <label for="name" class="{{ $label }}">Recipe name</label>
 
-            <div class="border-2 border-dashed border-gray-200 rounded-2xl bg-stone-50 p-7 text-center hover:border-orange-300 hover:bg-orange-50/40 transition">
+                    <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        value="{{ old('name') }}"
+                        placeholder="e.g. Chicken Teriyaki"
+                        @error('name') aria-invalid="true" @enderror
+                        class="{{ $field }} {{ $errors->has('name') ? $fieldInvalid : '' }}"
+                    >
 
-                <div class="w-14 h-14 mx-auto rounded-2xl bg-orange-100 flex items-center justify-center text-2xl">
-                    📷
+                    @error('name')
+                        <p class="text-xs text-red-600 mt-1.5">{{ $message }}</p>
+                    @enderror
+
                 </div>
 
-                <p class="font-semibold text-gray-700 mt-4">
-                    Add a photo of your recipe
+                <div>
+
+                    <label for="description" class="{{ $label }}">Description</label>
+
+                    <textarea
+                        id="description"
+                        name="description"
+                        rows="4"
+                        placeholder="Briefly describe your recipe..."
+                        @error('description') aria-invalid="true" @enderror
+                        class="{{ $field }} {{ $errors->has('description') ? $fieldInvalid : '' }}"
+                    >{{ old('description') }}</textarea>
+
+                    @error('description')
+                        <p class="text-xs text-red-600 mt-1.5">{{ $message }}</p>
+                    @enderror
+
+                </div>
+
+            </section>
+
+
+            <!-- Details -->
+
+            <section class="{{ $card }}">
+
+                <p class="{{ $step }}">
+                    Step 2
                 </p>
 
-                <p class="text-sm text-gray-400 mt-1">
-                    JPG, JPEG, PNG or WEBP · Maximum 2MB
+                <h2 class="{{ $sectionTitle }} mt-1">
+                    Details
+                </h2>
+
+                <p class="{{ $sectionHint }}">
+                    Used for filtering, sorting and meal planning.
                 </p>
 
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                    <div>
+
+                        <label for="category" class="{{ $label }}">🏷️ Category</label>
+
+                        <select
+                            id="category"
+                            name="category"
+                            @error('category') aria-invalid="true" @enderror
+                            class="{{ $field }} {{ $errors->has('category') ? $fieldInvalid : '' }}"
+                        >
+
+                            @foreach (['Breakfast', 'Lunch', 'Dinner', 'Dessert', 'Snack', 'Drinks'] as $option)
+
+                                <option value="{{ $option }}" {{ old('category', 'Dinner') === $option ? 'selected' : '' }}>
+                                    {{ $option }}
+                                </option>
+
+                            @endforeach
+
+                        </select>
+
+                        @error('category')
+                            <p class="text-xs text-red-600 mt-1.5">{{ $message }}</p>
+                        @enderror
+
+                    </div>
+
+                    <div>
+
+                        <label for="cooking_time" class="{{ $label }}">⏱️ Cooking time</label>
+
+                        <div class="relative">
+
+                            <input
+                                type="number"
+                                id="cooking_time"
+                                name="cooking_time"
+                                value="{{ old('cooking_time') }}"
+                                min="1"
+                                placeholder="30"
+                                @error('cooking_time') aria-invalid="true" @enderror
+                                class="{{ $field }} pr-20 {{ $errors->has('cooking_time') ? $fieldInvalid : '' }}"
+                            >
+
+                            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
+                                minutes
+                            </span>
+
+                        </div>
+
+                        @error('cooking_time')
+                            <p class="text-xs text-red-600 mt-1.5">{{ $message }}</p>
+                        @enderror
+
+                    </div>
+
+                    <div>
+
+                        <label for="difficulty" class="{{ $label }}">⭐ Difficulty</label>
+
+                        <select
+                            id="difficulty"
+                            name="difficulty"
+                            @error('difficulty') aria-invalid="true" @enderror
+                            class="{{ $field }} {{ $errors->has('difficulty') ? $fieldInvalid : '' }}"
+                        >
+
+                            @foreach (['Easy', 'Medium', 'Hard'] as $option)
+
+                                <option value="{{ $option }}" {{ old('difficulty', 'Easy') === $option ? 'selected' : '' }}>
+                                    {{ $option }}
+                                </option>
+
+                            @endforeach
+
+                        </select>
+
+                        @error('difficulty')
+                            <p class="text-xs text-red-600 mt-1.5">{{ $message }}</p>
+                        @enderror
+
+                    </div>
+
+                    <div>
+
+                        <label for="servings" class="{{ $label }}">👥 Servings</label>
+
+                        <input
+                            type="number"
+                            id="servings"
+                            name="servings"
+                            value="{{ old('servings') }}"
+                            min="1"
+                            placeholder="4"
+                            @error('servings') aria-invalid="true" @enderror
+                            class="{{ $field }} {{ $errors->has('servings') ? $fieldInvalid : '' }}"
+                        >
+
+                        @error('servings')
+                            <p class="text-xs text-red-600 mt-1.5">{{ $message }}</p>
+                        @enderror
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </div>
+
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            <!-- Ingredients -->
+
+            <section class="{{ $card }}">
+
+                <p class="{{ $step }}">
+                    Step 3
+                </p>
+
+                <h2 class="{{ $sectionTitle }} mt-1">
+                    Ingredients
+                </h2>
+
+                <p class="{{ $sectionHint }}">
+                    One per line, with quantities where possible.
+                </p>
+
+                <textarea
+                    id="ingredients"
+                    name="ingredients"
+                    rows="11"
+                    spellcheck="false"
+                    placeholder="2 eggs&#10;1/2 teaspoon salt&#10;3 cups rice"
+                    @error('ingredients') aria-invalid="true" @enderror
+                    class="{{ $field }} font-mono leading-6 {{ $errors->has('ingredients') ? $fieldInvalid : '' }}"
+                >{{ old('ingredients') }}</textarea>
+
+                @error('ingredients')
+                    <p class="text-xs text-red-600 mt-1.5">{{ $message }}</p>
+                @enderror
+
+                <p class="text-xs text-gray-400 mt-2">
+                    💡 These are rendered as a list on the recipe page.
+                </p>
+
+            </section>
+
+
+            <!-- Instructions -->
+
+            <section class="{{ $card }}">
+
+                <p class="{{ $step }}">
+                    Step 4
+                </p>
+
+                <h2 class="{{ $sectionTitle }} mt-1">
+                    Instructions
+                </h2>
+
+                <p class="{{ $sectionHint }}">
+                    One step per line, in the order they should be followed.
+                </p>
+
+                <textarea
+                    id="instructions"
+                    name="instructions"
+                    rows="11"
+                    spellcheck="false"
+                    placeholder="1. Beat the eggs.&#10;2. Heat the pan.&#10;3. Cook until done."
+                    @error('instructions') aria-invalid="true" @enderror
+                    class="{{ $field }} font-mono leading-6 {{ $errors->has('instructions') ? $fieldInvalid : '' }}"
+                >{{ old('instructions') }}</textarea>
+
+                @error('instructions')
+                    <p class="text-xs text-red-600 mt-1.5">{{ $message }}</p>
+                @enderror
+
+                <p class="text-xs text-gray-400 mt-2">
+                    💡 Leading numbers are stripped and re-added automatically.
+                </p>
+
+            </section>
+
+        </div>
+
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            <!-- Image -->
+
+            <section class="{{ $card }}">
+
+                <h2 class="{{ $sectionTitle }}">
+                    Photo
+                </h2>
+
+                <p class="{{ $sectionHint }}">
+                    Optional — you can always upload one later.
+                </p>
+
+                <div class="relative h-40 rounded-xl overflow-hidden bg-orange-50 border border-gray-100">
+
+                    <img
+                        id="image-preview"
+                        alt="Selected image preview"
+                        class="w-full h-full object-cover hidden"
+                    >
+
+                    <div
+                        id="image-placeholder"
+                        class="w-full h-full flex flex-col items-center justify-center"
+                    >
+                        <span class="text-4xl">🍳</span>
+                        <p class="text-xs text-gray-400 mt-1">No image yet</p>
+                    </div>
+
+                </div>
 
                 <label
                     for="image"
-                    class="inline-flex items-center justify-center gap-2 bg-orange-500 text-white px-5 py-2.5 rounded-xl font-semibold cursor-pointer hover:bg-orange-600 transition mt-5"
+                    class="mt-3 flex items-center justify-between gap-3 border border-dashed border-gray-300 rounded-xl px-4 py-3 bg-stone-50 hover:border-orange-300 hover:bg-orange-50/40 cursor-pointer transition"
                 >
-                    📷 Choose Image
-                </label>
-
-                <input
-                    id="image"
-                    type="file"
-                    name="image"
-                    accept="image/jpeg,image/png,image/webp"
-                    class="hidden"
-                >
-
-                <p
-                    id="file-name"
-                    class="text-sm text-gray-400 mt-3"
-                >
-                    No image selected
-                </p>
-
-            </div>
-
-        </div>
-
-    </section>
-
-    <!-- ========================================================= -->
-    <!-- Recipe Details -->
-    <!-- ========================================================= -->
-
-    <section class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
-
-        <div class="mb-6">
-
-            <p class="text-xs font-semibold uppercase tracking-[0.15em] text-orange-500">
-                Step 2
-            </p>
-
-            <h2 class="text-2xl font-bold text-gray-800 mt-1">
-                Recipe Details
-            </h2>
-
-            <p class="text-sm text-gray-500 mt-1">
-                Add information users can use when planning meals.
-            </p>
-
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-
-            <!-- Category -->
-
-            <div>
-
-                <label
-                    for="category"
-                    class="block text-sm font-semibold text-gray-700 mb-2"
-                >
-                    🏷️ Category
-                </label>
-
-                <select
-                    id="category"
-                    name="category"
-                    class="w-full border border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400"
-                >
-
-                    <option value="">
-                        Select Category
-                    </option>
-
-                    <option
-                        value="Breakfast"
-                        {{ old('category') === 'Breakfast' ? 'selected' : '' }}
-                    >
-                        Breakfast
-                    </option>
-
-                    <option
-                        value="Lunch"
-                        {{ old('category') === 'Lunch' ? 'selected' : '' }}
-                    >
-                        Lunch
-                    </option>
-
-                    <option
-                        value="Dinner"
-                        {{ old('category') === 'Dinner' ? 'selected' : '' }}
-                    >
-                        Dinner
-                    </option>
-
-                    <option
-                        value="Dessert"
-                        {{ old('category') === 'Dessert' ? 'selected' : '' }}
-                    >
-                        Dessert
-                    </option>
-
-                    <option
-                        value="Snack"
-                        {{ old('category') === 'Snack' ? 'selected' : '' }}
-                    >
-                        Snack
-                    </option>
-
-                    <option
-                        value="Drinks"
-                        {{ old('category') === 'Drinks' ? 'selected' : '' }}
-                    >
-                        Drinks
-                    </option>
-
-                </select>
-
-            </div>
-
-            <!-- Cooking Time -->
-
-            <div>
-
-                <label
-                    for="cooking_time"
-                    class="block text-sm font-semibold text-gray-700 mb-2"
-                >
-                    ⏱️ Cooking Time
-                </label>
-
-                <div class="relative">
-
-                    <input
-                        type="number"
-                        id="cooking_time"
-                        name="cooking_time"
-                        value="{{ old('cooking_time') }}"
-                        min="1"
-                        placeholder="e.g. 30"
-                        class="w-full border border-gray-200 rounded-xl px-4 py-3 pr-20 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400"
-                    >
-
-                    <span class="absolute right-4 top-3.5 text-sm text-gray-400">
-                        minutes
+                    <span class="flex items-center gap-2 text-sm text-gray-600 min-w-0">
+                        <span>📷</span>
+                        <span id="file-name" class="truncate">Choose an image</span>
                     </span>
 
-                </div>
+                    <span class="shrink-0 text-xs font-semibold text-orange-600">
+                        Browse
+                    </span>
 
-            </div>
+                    <input
+                        id="image"
+                        type="file"
+                        name="image"
+                        accept="image/jpeg,image/png,image/webp"
+                        class="sr-only"
+                    >
 
-            <!-- Difficulty -->
-
-            <div>
-
-                <label
-                    for="difficulty"
-                    class="block text-sm font-semibold text-gray-700 mb-2"
-                >
-                    ⭐ Difficulty
                 </label>
 
-                <select
-                    id="difficulty"
-                    name="difficulty"
-                    class="w-full border border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400"
-                >
+                @error('image')
+                    <p class="text-xs text-red-600 mt-1.5">{{ $message }}</p>
+                @enderror
 
-                    <option value="">
-                        Select Difficulty
-                    </option>
+            </section>
 
-                    <option
-                        value="Easy"
-                        {{ old('difficulty') === 'Easy' ? 'selected' : '' }}
-                    >
-                        Easy
-                    </option>
 
-                    <option
-                        value="Medium"
-                        {{ old('difficulty') === 'Medium' ? 'selected' : '' }}
-                    >
-                        Medium
-                    </option>
+            <!-- Tutorial + Visibility -->
 
-                    <option
-                        value="Hard"
-                        {{ old('difficulty') === 'Hard' ? 'selected' : '' }}
-                    >
-                        Hard
-                    </option>
+            <section class="{{ $card }}">
 
-                </select>
+                <h2 class="{{ $sectionTitle }}">
+                    Sharing
+                </h2>
 
-            </div>
+                <p class="{{ $sectionHint }}">
+                    Link a tutorial and control who can see this recipe.
+                </p>
 
-            <!-- Servings -->
-
-            <div>
-
-                <label
-                    for="servings"
-                    class="block text-sm font-semibold text-gray-700 mb-2"
-                >
-                    👥 Servings
-                </label>
+                <label for="tutorial_url" class="{{ $label }}">Video tutorial</label>
 
                 <input
-                    type="number"
-                    id="servings"
-                    name="servings"
-                    value="{{ old('servings') }}"
-                    min="1"
-                    placeholder="e.g. 4"
-                    class="w-full border border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400"
+                    type="url"
+                    id="tutorial_url"
+                    name="tutorial_url"
+                    value="{{ old('tutorial_url') }}"
+                    placeholder="https://www.youtube.com/..."
+                    @error('tutorial_url') aria-invalid="true" @enderror
+                    class="{{ $field }} {{ $errors->has('tutorial_url') ? $fieldInvalid : '' }}"
                 >
 
-            </div>
+                @error('tutorial_url')
+                    <p class="text-xs text-red-600 mt-1.5">{{ $message }}</p>
+                @enderror
 
-        </div>
+                <p class="{{ $label }} mt-5">Visibility</p>
 
-    </section>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
-    <!-- ========================================================= -->
-    <!-- Ingredients -->
-    <!-- ========================================================= -->
+                    <label class="cursor-pointer">
 
-    <section class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
+                        <input
+                            type="radio"
+                            name="is_public"
+                            value="0"
+                            class="peer sr-only"
+                            {{ (int) old('is_public', 1) === 0 ? 'checked' : '' }}
+                        >
 
-        <div class="mb-6">
-
-            <p class="text-xs font-semibold uppercase tracking-[0.15em] text-orange-500">
-                Step 3
-            </p>
-
-            <h2 class="text-2xl font-bold text-gray-800 mt-1">
-                🥕 Ingredients
-            </h2>
-
-            <p class="text-sm text-gray-500 mt-1">
-                Add one ingredient per line. Include quantities when available.
-            </p>
-
-        </div>
-
-        <textarea
-            id="ingredients"
-            name="ingredients"
-            rows="8"
-            placeholder="Example:
-
-            3 cups cooked rice
-            1 chicken breast
-            2 eggs
-            1 carrot
-            2 cloves garlic"
-            class="w-full border border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition"
-            >{{ old('ingredients') }}</textarea>
-
-        <div class="flex items-start gap-2 mt-3 text-xs text-gray-400">
-
-            <span>
-                💡
-            </span>
-
-            <p>
-                Quantities such as <strong>2 eggs</strong>, <strong>1/2 teaspoon salt</strong>,
-                or <strong>3 cups rice</strong> can also be used by the shopping list.
-            </p>
-
-        </div>
-
-    </section>
-
-
-    <!-- ========================================================= -->
-    <!-- Instructions -->
-    <!-- ========================================================= -->
-
-    <section class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
-
-        <div class="mb-6">
-
-            <p class="text-xs font-semibold uppercase tracking-[0.15em] text-orange-500">
-                Step 4
-            </p>
-
-            <h2 class="text-2xl font-bold text-gray-800 mt-1">
-                👨‍🍳 Instructions
-            </h2>
-
-            <p class="text-sm text-gray-500 mt-1">
-                Write the cooking steps in the order they should be followed.
-            </p>
-
-        </div>
-
-
-        <textarea
-            id="instructions"
-            name="instructions"
-            rows="10"
-            placeholder="Example:
-
-            1. Prepare the chicken.
-            2. Mix the sauce.
-            3. Cook the chicken.
-            4. Add the sauce.
-            5. Simmer until ready.
-            6. Serve."
-            class="w-full border border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition"
-            >{{ old('instructions') }}</textarea>
-
-    </section>
-
-
-    <!-- ========================================================= -->
-    <!-- Tutorial -->
-    <!-- ========================================================= -->
-
-    <section class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
-
-        <div class="mb-6">
-
-            <p class="text-xs font-semibold uppercase tracking-[0.15em] text-orange-500">
-                Optional
-            </p>
-
-            <h2 class="text-2xl font-bold text-gray-800 mt-1">
-                🎥 Tutorial
-            </h2>
-
-            <p class="text-sm text-gray-500 mt-1">
-                Add a YouTube tutorial if you want others to follow a video.
-            </p>
-
-        </div>
-
-
-        <input
-            type="url"
-            id="tutorial_url"
-            name="tutorial_url"
-            value="{{ old('tutorial_url') }}"
-            placeholder="https://www.youtube.com/..."
-            class="w-full border border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400"
-        >
-
-    </section>
-
-
-    <!-- ========================================================= -->
-    <!-- Visibility -->
-    <!-- ========================================================= -->
-
-    <section class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
-
-        <div class="mb-6">
-
-            <p class="text-xs font-semibold uppercase tracking-[0.15em] text-orange-500">
-                Sharing
-            </p>
-
-            <h2 class="text-2xl font-bold text-gray-800 mt-1">
-                Recipe Visibility
-            </h2>
-
-            <p class="text-sm text-gray-500 mt-1">
-                Choose who can discover your recipe.
-            </p>
-
-        </div>
-
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-
-            <!-- Private -->
-
-            <label class="cursor-pointer">
-
-                <input
-                    type="radio"
-                    name="is_public"
-                    value="0"
-                    class="peer sr-only"
-                    {{ old('is_public', 0) == 0 ? 'checked' : '' }}
-                >
-
-
-                <div class="h-full rounded-2xl border-2 border-gray-200 bg-white p-5 transition peer-checked:border-gray-500 peer-checked:bg-gray-50">
-
-                    <div class="flex items-start gap-3">
-
-                        <div class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
-                            🔒
+                        <div class="h-full rounded-xl border-2 border-gray-200 bg-white p-3 transition peer-checked:border-gray-500 peer-checked:bg-gray-50">
+                            <p class="text-sm font-semibold text-gray-800">🔒 Private</p>
+                            <p class="text-xs text-gray-500 mt-0.5">Only you can see it</p>
                         </div>
 
-                        <div>
+                    </label>
 
-                            <p class="font-semibold text-gray-800">
-                                Private
-                            </p>
+                    <label class="cursor-pointer">
 
-                            <p class="text-sm text-gray-500 mt-1 leading-6">
-                                Only you can view this recipe.
-                            </p>
+                        <input
+                            type="radio"
+                            name="is_public"
+                            value="1"
+                            class="peer sr-only"
+                            {{ (int) old('is_public', 1) === 1 ? 'checked' : '' }}
+                        >
 
+                        <div class="h-full rounded-xl border-2 border-gray-200 bg-white p-3 transition peer-checked:border-green-500 peer-checked:bg-green-50">
+                            <p class="text-sm font-semibold text-gray-800">🌎 Public</p>
+                            <p class="text-xs text-gray-500 mt-0.5">Anyone can discover it</p>
                         </div>
 
-                    </div>
+                    </label>
 
                 </div>
 
-            </label>
+                @error('is_public')
+                    <p class="text-xs text-red-600 mt-1.5">{{ $message }}</p>
+                @enderror
 
-
-            <!-- Public -->
-
-            <label class="cursor-pointer">
-
-                <input
-                    type="radio"
-                    name="is_public"
-                    value="1"
-                    class="peer sr-only"
-                    {{ old('is_public') == 1 ? 'checked' : '' }}
-                >
-
-
-                <div class="h-full rounded-2xl border-2 border-gray-200 bg-white p-5 transition peer-checked:border-green-500 peer-checked:bg-green-50">
-
-                    <div class="flex items-start gap-3">
-
-                        <div class="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center shrink-0">
-                            🌎
-                        </div>
-
-                        <div>
-
-                            <p class="font-semibold text-gray-800">
-                                Public
-                            </p>
-
-                            <p class="text-sm text-gray-500 mt-1 leading-6">
-                                Other users can discover and view this recipe.
-                            </p>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </label>
+            </section>
 
         </div>
 
-    </section>
 
+        <!-- Actions -->
 
-    <!-- ========================================================= -->
-    <!-- Actions -->
-    <!-- ========================================================= -->
+        <div class="sticky bottom-4 z-20">
 
-    <div class="flex flex-col-reverse sm:flex-row gap-3 pt-2">
+            <div class="bg-white/95 backdrop-blur border border-gray-100 rounded-2xl shadow-lg px-4 py-3 flex flex-col-reverse sm:flex-row gap-3">
 
-        <a
-            href="{{ url('/recipes') }}"
-            class="flex-1 inline-flex items-center justify-center bg-gray-100 text-gray-700 py-3.5 rounded-xl font-semibold hover:bg-gray-200 transition"
-        >
-            Cancel
-        </a>
+                <a
+                    href="{{ url('/recipes') }}"
+                    class="flex-1 inline-flex items-center justify-center bg-gray-100 text-gray-700 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-200 transition"
+                >
+                    Cancel
+                </a>
 
+                <button
+                    type="submit"
+                    class="flex-1 inline-flex items-center justify-center gap-2 bg-orange-500 text-white py-2.5 rounded-xl text-sm font-semibold shadow-sm hover:bg-orange-600 hover:shadow-md transition"
+                >
+                    Create recipe
+                </button>
 
-        <button
-            type="submit"
-            class="flex-1 inline-flex items-center justify-center gap-2 bg-orange-500 text-white py-3.5 rounded-xl font-semibold shadow-sm hover:bg-orange-600 hover:shadow-md transition"
-        >
-            🍳 Save Recipe
-        </button>
+            </div>
 
-    </div>
+        </div>
 
     </form>
 
 </div>
 
-<!-- Image filename -->
-
 <script>
 
-    const imageInput =
-        document.getElementById('image');
-
-    const fileName =
-        document.getElementById('file-name');
-
+    const imageInput = document.getElementById('image');
+    const fileName = document.getElementById('file-name');
+    const preview = document.getElementById('image-preview');
+    const placeholder = document.getElementById('image-placeholder');
 
     if (imageInput) {
 
-        imageInput.addEventListener(
-            'change',
-            function () {
+        imageInput.addEventListener('change', function () {
 
-                if (this.files.length > 0) {
+            const file = this.files[0];
 
-                    fileName.textContent =
-                        this.files[0].name;
+            if (!file) {
 
-                } else {
+                fileName.textContent = 'Choose an image';
 
-                    fileName.textContent =
-                        'No image selected';
-
-                }
+                return;
 
             }
-        );
+
+            fileName.textContent = file.name;
+
+            if (preview) {
+
+                preview.src = URL.createObjectURL(file);
+                preview.classList.remove('hidden');
+
+            }
+
+            if (placeholder) {
+
+                placeholder.classList.add('hidden');
+
+            }
+
+        });
 
     }
 

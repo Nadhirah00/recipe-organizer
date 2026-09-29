@@ -10,7 +10,11 @@
 
     <div class="mb-8">
 
-        <h1 class="text-4xl font-bold text-gray-800">
+        <p class="text-xs font-semibold uppercase tracking-[0.15em] text-orange-500">
+            Ingredient Search
+        </p>
+
+        <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-gray-800 mt-1">
             🔎 Find Recipes From My Ingredients
         </h1>
 

@@ -25,6 +25,70 @@ class Recipe extends Model
     protected $casts = ['is_public' => 'boolean'];
 
     /**
+     * The ingredients split into one trimmed entry per line, ready to render as
+     * a list rather than a single block of pre-formatted text.
+     *
+     * Blank lines and stray bullet markers typed by the user are discarded. The
+     * raw column is deliberately left untouched so the edit form textarea still
+     * round-trips exactly what was saved.
+     *
+     * @return list<string>
+     */
+    public function ingredientList(): array
+    {
+        return $this->toLines($this->ingredients);
+    }
+
+    /**
+     * The instructions split into one trimmed entry per line, with any leading
+     * "1." or "2)" numbering removed so the view can number the steps itself.
+     *
+     * @return list<string>
+     */
+    public function instructionSteps(): array
+    {
+        return array_values(
+            array_filter(
+                array_map(
+                    function (string $line): string {
+                        return preg_replace('/^\d+[.)]\s*/', '', $line) ?? $line;
+                    },
+                    $this->toLines($this->instructions)
+                ),
+                fn (string $line): bool => $line !== ''
+            )
+        );
+    }
+
+    /**
+     * Split a free-text column into trimmed, non-empty lines.
+     *
+     * @return list<string>
+     */
+    private function toLines(?string $value): array
+    {
+        if (blank($value)) {
+            return [];
+        }
+
+        $lines = preg_split('/\R+/', $value) ?: [];
+
+        return array_values(
+            array_filter(
+                array_map(
+                    function (string $line): string {
+                        return trim(
+                            preg_replace('/^[-*\x{2022}]\s+/u', '', $line) ?? $line
+                        );
+                    },
+                    $lines
+                ),
+                fn (string $line): bool => $line !== ''
+            )
+        );
+    }
+
+    /**
      * The privacy-enhanced embed URL for a YouTube tutorial, or null when the
      * stored link is empty or points somewhere other than YouTube.
      *

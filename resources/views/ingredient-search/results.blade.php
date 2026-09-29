@@ -19,7 +19,7 @@
                 ← Search Again
             </a>
 
-            <h1 class="text-4xl font-bold text-gray-800 mt-4">
+            <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-gray-800 mt-4">
                 🍳 Recipe Matches
             </h1>
 

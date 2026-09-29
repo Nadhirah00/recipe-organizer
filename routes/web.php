@@ -1,12 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Str;
-
 use App\Http\Controllers\AiMealPlanController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
@@ -17,23 +10,40 @@ use App\Http\Controllers\MealPlanController;
 use App\Http\Controllers\RecipeController;
 use App\Http\Controllers\ShoppingListController;
 use App\Http\Controllers\UserPreferenceController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
+
+/*
+|--------------------------------------------------------------------------
+| Welcome
+|--------------------------------------------------------------------------
+*/
+Route::get('/', function () {
+
+    return auth()->check()
+        ? redirect('/dashboard')
+        : view('welcome');
+
+})->name('home');
 
 /*
 |--------------------------------------------------------------------------
 | Authentication
 |--------------------------------------------------------------------------
 */
-Route::get('/register', [AuthController::class,'showRegister'])
+Route::get('/register', [AuthController::class, 'showRegister'])
     ->name('register');
 
-Route::post('/register', [AuthController::class,'register']);
+Route::post('/register', [AuthController::class, 'register']);
 
-Route::get('/login', [AuthController::class,'showLogin'])
+Route::get('/login', [AuthController::class, 'showLogin'])
     ->name('login');
-Route::post('/login', [AuthController::class,'login']);
-Route::post('/logout', [AuthController::class,'logout'])
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout'])
     ->name('logout');
-
 
 /*
 |--------------------------------------------------------------------------
@@ -56,7 +66,6 @@ Route::post('/forgot-password', function (Request $request) {
     $request->validate([
         'email' => ['required', 'email'],
     ]);
-
 
     $status = Password::sendResetLink(
         $request->only('email')
@@ -100,7 +109,7 @@ Route::post('/reset-password', function (
         'password' => [
             'required',
             'confirmed',
-            'min:8'
+            'min:8',
         ],
     ]);
 
@@ -139,7 +148,6 @@ Route::post('/reset-password', function (
 
 })->middleware('guest')->name('password.update');
 
-
 /*
 |--------------------------------------------------------------------------
 | Authenticated Routes
@@ -152,7 +160,7 @@ Route::middleware('auth')->group(function () {
     | Dashboard
     |--------------------------------------------------------------------------
     */
-    Route::get('/dashboard', [DashboardController::class,'index'])
+    Route::get('/dashboard', [DashboardController::class, 'index'])
         ->name('dashboard');
 
     /*
@@ -160,31 +168,31 @@ Route::middleware('auth')->group(function () {
     | Recipes
     |--------------------------------------------------------------------------
     */
-    Route::get('/recipes', [RecipeController::class,'index']);
-    Route::get('/recipes/create', [RecipeController::class,'create']);
-    Route::post('/recipes', [RecipeController::class,'store']);
-    Route::get('/recipes/{id}', [RecipeController::class,'show']);
-    Route::get('/recipes/{id}/edit', [RecipeController::class,'edit']);
-    Route::put('/recipes/{id}', [RecipeController::class,'update']);
-    Route::delete('/recipes/{id}', [RecipeController::class,'destroy']);
+    Route::get('/recipes', [RecipeController::class, 'index']);
+    Route::get('/recipes/create', [RecipeController::class, 'create']);
+    Route::post('/recipes', [RecipeController::class, 'store']);
+    Route::get('/recipes/{id}', [RecipeController::class, 'show']);
+    Route::get('/recipes/{id}/edit', [RecipeController::class, 'edit']);
+    Route::put('/recipes/{id}', [RecipeController::class, 'update']);
+    Route::delete('/recipes/{id}', [RecipeController::class, 'destroy']);
 
     /*
     |--------------------------------------------------------------------------
     | Favorites
     |--------------------------------------------------------------------------
     */
-    Route::post('/recipes/{id}/favorite', [FavoriteController::class,'store']);
-    Route::delete('/recipes/{id}/favorite', [FavoriteController::class,'destroy']);
-    Route::get('/favorites', [FavoriteController::class,'index']);
+    Route::post('/recipes/{id}/favorite', [FavoriteController::class, 'store']);
+    Route::delete('/recipes/{id}/favorite', [FavoriteController::class, 'destroy']);
+    Route::get('/favorites', [FavoriteController::class, 'index']);
 
     /*
     |--------------------------------------------------------------------------
     | Explore Recipes
     |--------------------------------------------------------------------------
     */
-    Route::get('/discover', [RecipeController::class,'discover'])
+    Route::get('/discover', [RecipeController::class, 'discover'])
         ->name('recipes.discover');
-    Route::get('/explore', [ExploreRecipeController::class,'index'])
+    Route::get('/explore', [ExploreRecipeController::class, 'index'])
         ->name('recipes.explore');
 
     /*
@@ -192,9 +200,9 @@ Route::middleware('auth')->group(function () {
     | Find Recipes By Ingredients
     |--------------------------------------------------------------------------
     */
-    Route::get('/find-by-ingredients', [IngredientSearchController::class,'index'])
+    Route::get('/find-by-ingredients', [IngredientSearchController::class, 'index'])
         ->name('ingredients.search');
-    Route::post('/find-by-ingredients', [IngredientSearchController::class,'search'])
+    Route::post('/find-by-ingredients', [IngredientSearchController::class, 'search'])
         ->name('ingredients.search.results');
 
     /*
@@ -202,12 +210,12 @@ Route::middleware('auth')->group(function () {
     | Meal Planner
     |--------------------------------------------------------------------------
     */
-    Route::get('/meal-planner', [MealPlanController::class,'index']);
-    Route::get('/meal-planner/recipes/search', [MealPlanController::class,'searchRecipes'])
+    Route::get('/meal-planner', [MealPlanController::class, 'index']);
+    Route::get('/meal-planner/recipes/search', [MealPlanController::class, 'searchRecipes'])
         ->name('meal-planner.recipes.search');
-    Route::post('/meal-planner', [MealPlanController::class,'store']);
-    Route::delete('/meal-planner/{id}', [MealPlanController::class,'destroy']);
-    Route::delete('/meal-planner', [MealPlanController::class,'clear'])
+    Route::post('/meal-planner', [MealPlanController::class, 'store']);
+    Route::delete('/meal-planner/{id}', [MealPlanController::class, 'destroy']);
+    Route::delete('/meal-planner', [MealPlanController::class, 'clear'])
         ->name('meal-planner.clear');
 
     /*
@@ -215,20 +223,20 @@ Route::middleware('auth')->group(function () {
     | Meal Preferences
     |--------------------------------------------------------------------------
     */
-    Route::get('/preferences', [UserPreferenceController::class,'edit']);
-    Route::put('/preferences', [UserPreferenceController::class,'update']);
+    Route::get('/preferences', [UserPreferenceController::class, 'edit']);
+    Route::put('/preferences', [UserPreferenceController::class, 'update']);
 
     /*
     |--------------------------------------------------------------------------
     | AI Meal Planning
     |--------------------------------------------------------------------------
     */
-    Route::get('/meal-planner/ai', [AiMealPlanController::class,'generate']);
-    Route::get('/meal-planner/ai/setup', [AiMealPlanController::class,'setup'])
+    Route::get('/meal-planner/ai', [AiMealPlanController::class, 'generate']);
+    Route::get('/meal-planner/ai/setup', [AiMealPlanController::class, 'setup'])
         ->name('meal-planner.ai.setup');
-    Route::post('/meal-planner/ai/generate', [AiMealPlanController::class,'generate'])
+    Route::post('/meal-planner/ai/generate', [AiMealPlanController::class, 'generate'])
         ->name('meal-planner.ai.generate');
-    Route::post('/meal-planner/accept', [AiMealPlanController::class,'accept'])
+    Route::post('/meal-planner/accept', [AiMealPlanController::class, 'accept'])
         ->name('meal-planner.accept');
 
     /*
@@ -236,10 +244,10 @@ Route::middleware('auth')->group(function () {
     | Shopping List
     |--------------------------------------------------------------------------
     */
-    Route::get('/shopping-list', [ShoppingListController::class,'index']);
-    Route::post('/shopping-list/generate', [ShoppingListController::class,'generate']);
-    Route::patch('/shopping-list/{id}/toggle', [ShoppingListController::class,'toggle']);
-    Route::delete('/shopping-list/{id}', [ShoppingListController::class,'destroy']);
-    Route::delete('/shopping-list', [ShoppingListController::class,'clear']);
+    Route::get('/shopping-list', [ShoppingListController::class, 'index']);
+    Route::post('/shopping-list/generate', [ShoppingListController::class, 'generate']);
+    Route::patch('/shopping-list/{id}/toggle', [ShoppingListController::class, 'toggle']);
+    Route::delete('/shopping-list/{id}', [ShoppingListController::class, 'destroy']);
+    Route::delete('/shopping-list', [ShoppingListController::class, 'clear']);
 
 });
