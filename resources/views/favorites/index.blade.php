@@ -164,7 +164,7 @@
     <!-- Favorite Grid -->
     <!-- ===================================================== -->
 
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
         @foreach ($favorites as $favorite)
 
@@ -204,11 +204,25 @@
 
                             <div class="w-full h-full flex items-center justify-center">
 
-                                <span class="text-7xl">
+                                <span class="text-6xl">
                                     🍳
                                 </span>
 
                             </div>
+
+                        @endif
+
+
+                        @if ($recipe->is_public)
+
+                            <span
+                                class="absolute top-4 left-4 inline-flex items-center gap-1
+                                       bg-white/95 backdrop-blur text-green-700
+                                       px-3 py-1.5 rounded-full
+                                       text-xs font-semibold shadow-sm"
+                            >
+                                🌎 Public
+                            </span>
 
                         @endif
 
@@ -228,11 +242,31 @@
                             </button>
 
 
-                            <!-- Favorite Badge -->
+                            <!-- Favorite Toggle -->
 
-                            <span class="w-9 h-9 rounded-full bg-white/95 backdrop-blur flex items-center justify-center shadow-sm text-sm">
-                                ❤️
-                            </span>
+                            <form
+                                action="{{ url('/recipes/' . $recipe->id . '/favorite') }}"
+                                method="POST"
+                                data-favorite-toggle
+                                data-favorite="1"
+                            >
+
+                                @csrf
+                                @method('DELETE')
+
+                                <button
+                                    type="submit"
+                                    title="Remove from favourites"
+                                    aria-label="Remove {{ $recipe->name }} from favourites"
+                                    class="w-9 h-9 inline-flex items-center justify-center
+                                           bg-white/95 backdrop-blur
+                                           rounded-full shadow-sm text-sm
+                                           hover:bg-red-500 hover:text-white transition"
+                                >
+                                    ❤️
+                                </button>
+
+                            </form>
 
                         </div>
 
@@ -245,7 +279,7 @@
 
                         <!-- Recipe Name -->
 
-                        <h3 class="text-xl font-bold leading-snug text-gray-800 group-hover:text-orange-600 transition">
+                        <h3 class="text-xl font-bold text-gray-800 group-hover:text-orange-600 transition">
                             {{ $recipe->name }}
                         </h3>
 
@@ -273,53 +307,32 @@
                         </p>
 
 
-                        <!-- Description -->
+                        @if ($recipe->description)
 
-                        <div class="mt-3 min-h-[48px]">
+                            <p class="text-sm text-gray-500 mt-3 line-clamp-2">
+                                {{ $recipe->description }}
+                            </p>
 
-                            @if ($recipe->description)
-
-                                <p class="text-sm text-gray-500 leading-6 line-clamp-2">
-                                    {{ $recipe->description }}
-                                </p>
-
-                            @else
-
-                                <p class="text-sm text-gray-400 italic">
-                                    No description provided.
-                                </p>
-
-                            @endif
-
-                        </div>
+                        @endif
 
 
                         <!-- Recipe Information -->
 
-                        <div class="flex flex-wrap gap-2 mt-5">
+                        <div class="flex flex-wrap gap-2 mt-4">
 
-                            <span class="inline-flex items-center gap-1.5 bg-orange-50 text-orange-700 px-3 py-1.5 rounded-full text-xs font-semibold">
+                            <span class="bg-orange-50 text-orange-700 px-3 py-1.5 rounded-full text-xs font-semibold">
                                 🏷 {{ $recipe->category }}
                             </span>
 
-                            <span class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-xs font-semibold">
+                            <span class="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-xs font-semibold">
                                 ⏱ {{ $recipe->cooking_time }} min
                             </span>
 
-                            <span class="inline-flex items-center gap-1.5 bg-purple-50 text-purple-700 px-3 py-1.5 rounded-full text-xs font-semibold">
+                            <span class="bg-purple-50 text-purple-700 px-3 py-1.5 rounded-full text-xs font-semibold">
                                 ⭐ {{ $recipe->difficulty }}
                             </span>
 
                         </div>
-
-
-                        <!-- Servings -->
-
-                        <p class="text-sm text-gray-500 mt-4">
-                            👥
-                            {{ $recipe->servings }}
-                            {{ $recipe->servings == 1 ? 'serving' : 'servings' }}
-                        </p>
 
                     </div>
 

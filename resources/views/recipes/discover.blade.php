@@ -304,6 +304,8 @@
                                 <form
                                     action="{{ url('/recipes/' . $recipe->id . '/favorite') }}"
                                     method="POST"
+                                    data-favorite-toggle
+                                    data-favorite="1"
                                 >
 
                                     @csrf
@@ -325,6 +327,8 @@
                                 <form
                                     action="{{ url('/recipes/' . $recipe->id . '/favorite') }}"
                                     method="POST"
+                                    data-favorite-toggle
+                                    data-favorite="0"
                                 >
 
                                     @csrf
