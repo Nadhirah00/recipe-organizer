@@ -240,15 +240,22 @@ Garlic"
                         @endphp
 
                         <article
-                            class="bg-white rounded-2xl border border-gray-100
+                            class="relative bg-white rounded-2xl border border-gray-100
                                    shadow-sm p-6 hover:shadow-md transition"
                         >
+
+                            {{-- Whole-card link, kept beneath the action icons --}}
+                            <a
+                                href="{{ url('/recipes/' . $recipe->id) }}"
+                                class="absolute inset-0 z-0"
+                                aria-label="View {{ $recipe->name }}"
+                            ></a>
 
                             <div class="flex flex-col lg:flex-row gap-6">
 
                                 {{-- Recipe Image --}}
                                 <div
-                                    class="w-full lg:w-56 h-40 shrink-0
+                                    class="relative w-full lg:w-56 h-40 shrink-0
                                            rounded-2xl overflow-hidden bg-orange-50"
                                 >
 
@@ -267,6 +274,89 @@ Garlic"
                                         </div>
 
                                     @endif
+
+                                    <div
+                                        class="absolute top-3 right-3 z-10
+                                               flex items-center gap-1.5"
+                                    >
+
+                                        <button
+                                            type="button"
+                                            onclick="openExploreMealModal(
+                                                {{ $recipe->id }},
+                                                @js($recipe->name),
+                                                @js($recipe->category)
+                                            )"
+                                            title="Add to meal plan"
+                                            aria-label="Add {{ $recipe->name }} to meal plan"
+                                            class="w-9 h-9 inline-flex items-center justify-center
+                                                   bg-white/95 backdrop-blur text-gray-600
+                                                   rounded-full shadow-sm text-sm
+                                                   hover:bg-orange-500 hover:text-white transition"
+                                        >
+                                            📅
+                                        </button>
+
+                                        @auth
+
+                                            @if (
+                                                $recipe->favorites
+                                                    ->contains(
+                                                        fn ($favorite) =>
+                                                            $favorite->user_id === auth()->id()
+                                                    )
+                                            )
+
+                                                <form
+                                                    action="{{ url('/recipes/' . $recipe->id . '/favorite') }}"
+                                                    method="POST"
+                                                >
+
+                                                    @csrf
+                                                    @method('DELETE')
+
+                                                    <button
+                                                        type="submit"
+                                                        title="Remove from favourites"
+                                                        aria-label="Remove {{ $recipe->name }} from favourites"
+                                                        class="w-9 h-9 inline-flex items-center justify-center
+                                                               bg-white/95 backdrop-blur
+                                                               rounded-full shadow-sm text-sm
+                                                               hover:bg-red-500 hover:text-white transition"
+                                                    >
+                                                        ❤️
+                                                    </button>
+
+                                                </form>
+
+                                            @else
+
+                                                <form
+                                                    action="{{ url('/recipes/' . $recipe->id . '/favorite') }}"
+                                                    method="POST"
+                                                >
+
+                                                    @csrf
+
+                                                    <button
+                                                        type="submit"
+                                                        title="Add to favourites"
+                                                        aria-label="Add {{ $recipe->name }} to favourites"
+                                                        class="w-9 h-9 inline-flex items-center justify-center
+                                                               bg-white/95 backdrop-blur
+                                                               rounded-full shadow-sm text-sm
+                                                               hover:bg-red-500 hover:text-white transition"
+                                                    >
+                                                        ♡
+                                                    </button>
+
+                                                </form>
+
+                                            @endif
+
+                                        @endauth
+
+                                    </div>
 
                                 </div>
 
@@ -438,36 +528,6 @@ Garlic"
 
 
                                     {{-- Actions --}}
-                                    <div class="flex flex-col sm:flex-row gap-3 mt-6">
-
-                                        <a
-                                            href="{{ url('/recipes/' . $recipe->id) }}"
-                                            class="inline-flex items-center justify-center gap-2
-                                                   bg-orange-500 text-white px-5 py-2.5
-                                                   rounded-xl font-semibold
-                                                   hover:bg-orange-600 transition"
-                                        >
-                                            View Recipe →
-                                        </a>
-
-
-                                        <button
-                                            type="button"
-                                            onclick="openExploreMealModal(
-                                                {{ $recipe->id }},
-                                                @js($recipe->name),
-                                                @js($recipe->category)
-                                            )"
-                                            class="inline-flex items-center justify-center gap-2
-                                                   border border-orange-200 text-orange-500
-                                                   px-5 py-2.5 rounded-xl font-semibold
-                                                   hover:bg-orange-50 transition"
-                                        >
-                                            📅 Add to Meal Plan
-                                        </button>
-
-                                    </div>
-
                                 </div>
 
                             </div>
@@ -844,14 +904,21 @@ Garlic"
                     @foreach ($publicRecipes as $recipe)
 
                         <article
-                            class="group bg-white rounded-2xl border border-gray-100
+                            class="group relative bg-white rounded-2xl border border-gray-100
                                    shadow-sm overflow-hidden hover:shadow-lg
                                    transition duration-300"
                         >
 
+                            {{-- Whole-card link, kept beneath the action icons --}}
+                            <a
+                                href="{{ url('/recipes/' . $recipe->id) }}"
+                                class="absolute inset-0 z-0"
+                                aria-label="View {{ $recipe->name }}"
+                            ></a>
+
                             {{-- Image --}}
                             <div
-                                class="relative h-48 bg-orange-50 overflow-hidden"
+                                class="relative h-52 bg-orange-50 overflow-hidden"
                             >
 
                                 @if ($recipe->image)
@@ -883,6 +950,91 @@ Garlic"
                                 >
                                     🌎 Public
                                 </span>
+
+
+                                {{-- Card Actions --}}
+                                <div
+                                    class="absolute top-4 right-4 z-10
+                                           flex items-center gap-1.5"
+                                >
+
+                                    <button
+                                        type="button"
+                                        onclick="openExploreMealModal(
+                                            {{ $recipe->id }},
+                                            @js($recipe->name),
+                                            @js($recipe->category)
+                                        )"
+                                        title="Add to meal plan"
+                                        aria-label="Add {{ $recipe->name }} to meal plan"
+                                        class="w-9 h-9 inline-flex items-center justify-center
+                                               bg-white/95 backdrop-blur text-gray-600
+                                               rounded-full shadow-sm text-sm
+                                               hover:bg-orange-500 hover:text-white transition"
+                                    >
+                                        📅
+                                    </button>
+
+                                    @auth
+
+                                        @if (
+                                            $recipe->favorites
+                                                ->contains(
+                                                    fn ($favorite) =>
+                                                        $favorite->user_id === auth()->id()
+                                                )
+                                        )
+
+                                            <form
+                                                action="{{ url('/recipes/' . $recipe->id . '/favorite') }}"
+                                                method="POST"
+                                            >
+
+                                                @csrf
+                                                @method('DELETE')
+
+                                                <button
+                                                    type="submit"
+                                                    title="Remove from favourites"
+                                                    aria-label="Remove {{ $recipe->name }} from favourites"
+                                                    class="w-9 h-9 inline-flex items-center justify-center
+                                                           bg-white/95 backdrop-blur
+                                                           rounded-full shadow-sm text-sm
+                                                           hover:bg-red-500 hover:text-white transition"
+                                                >
+                                                    ❤️
+                                                </button>
+
+                                            </form>
+
+                                        @else
+
+                                            <form
+                                                action="{{ url('/recipes/' . $recipe->id . '/favorite') }}"
+                                                method="POST"
+                                            >
+
+                                                @csrf
+
+                                                <button
+                                                    type="submit"
+                                                    title="Add to favourites"
+                                                    aria-label="Add {{ $recipe->name }} to favourites"
+                                                    class="w-9 h-9 inline-flex items-center justify-center
+                                                           bg-white/95 backdrop-blur
+                                                           rounded-full shadow-sm text-sm
+                                                           hover:bg-red-500 hover:text-white transition"
+                                                >
+                                                    ♡
+                                                </button>
+
+                                            </form>
+
+                                        @endif
+
+                                    @endauth
+
+                                </div>
 
                             </div>
 
@@ -952,82 +1104,6 @@ Garlic"
                                     >
                                         ⭐ {{ $recipe->difficulty }}
                                     </span>
-
-                                </div>
-
-
-                                {{-- Actions --}}
-                                <div class="grid grid-cols-2 gap-2 mt-6">
-
-                                    <a
-                                        href="{{ url('/recipes/' . $recipe->id) }}"
-                                        class="inline-flex items-center justify-center gap-1
-                                               bg-orange-500 text-white py-2.5
-                                               rounded-xl font-semibold
-                                               hover:bg-orange-600 transition"
-                                    >
-                                        View →
-                                    </a>
-
-
-                                    @auth
-
-                                        @if (
-                                            $recipe->favorites
-                                                ->contains(
-                                                    fn ($favorite) =>
-                                                        $favorite->user_id === auth()->id()
-                                                )
-                                        )
-
-                                            <form
-                                                action="{{ url('/recipes/' . $recipe->id . '/favorite') }}"
-                                                method="POST"
-                                            >
-
-                                                @csrf
-                                                @method('DELETE')
-
-                                                <button
-                                                    type="submit"
-                                                    class="w-full inline-flex items-center
-                                                           justify-center gap-1
-                                                           border border-red-200
-                                                           text-red-500 py-2.5 rounded-xl
-                                                           font-semibold
-                                                           hover:bg-red-50 transition"
-                                                >
-                                                    ❤️ Favorited
-                                                </button>
-
-                                            </form>
-
-                                        @else
-
-                                            <form
-                                                action="{{ url('/recipes/' . $recipe->id . '/favorite') }}"
-                                                method="POST"
-                                            >
-
-                                                @csrf
-
-                                                <button
-                                                    type="submit"
-                                                    class="w-full inline-flex items-center
-                                                           justify-center gap-1
-                                                           border border-orange-200
-                                                           text-orange-500 py-2.5 rounded-xl
-                                                           font-semibold
-                                                           hover:bg-orange-50 transition"
-                                                >
-                                                    ♡ Favorite
-                                                </button>
-
-                                            </form>
-
-                                        @endif
-
-                                    @endauth
 
                                 </div>
 

@@ -185,7 +185,10 @@ class ExploreRecipeController extends Controller
                 |
                 */
 
-                $recipes = Recipe::with('user')
+                $recipes = Recipe::with([
+                    'user',
+                    'favorites',
+                ])
                     ->where(function ($query) {
 
                         $query->where(

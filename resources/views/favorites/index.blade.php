@@ -176,12 +176,21 @@
             @if ($recipe)
 
                 <article
-                    class="group bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-lg transition duration-300"
+                    class="group relative bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-lg transition duration-300"
                 >
+
+                    <!-- Whole-card link, kept beneath the action icons -->
+
+                    <a
+                        href="{{ url('/recipes/' . $recipe->id) }}"
+                        class="absolute inset-0 z-0"
+                        aria-label="View {{ $recipe->name }}"
+                    ></a>
+
 
                     <!-- Image -->
 
-                    <div class="relative h-56 bg-orange-50 overflow-hidden">
+                    <div class="relative h-52 bg-orange-50 overflow-hidden">
 
                         @if ($recipe->image)
 
@@ -204,11 +213,24 @@
                         @endif
 
 
-                        <!-- Favorite Badge -->
+                        <!-- Card Actions -->
 
-                        <div class="absolute top-4 right-4">
+                        <div class="absolute top-4 right-4 z-10 flex items-center gap-1.5">
 
-                            <span class="w-10 h-10 rounded-full bg-white/95 backdrop-blur flex items-center justify-center shadow-sm text-lg">
+                            <button
+                                type="button"
+                                onclick="openFavouritesCardMealModal({{ $recipe->id }}, @js($recipe->name), @js($recipe->category))"
+                                title="Add to meal plan"
+                                aria-label="Add {{ $recipe->name }} to meal plan"
+                                class="w-9 h-9 inline-flex items-center justify-center bg-white/95 backdrop-blur text-gray-600 rounded-full shadow-sm text-sm hover:bg-orange-500 hover:text-white transition"
+                            >
+                                📅
+                            </button>
+
+
+                            <!-- Favorite Badge -->
+
+                            <span class="w-9 h-9 rounded-full bg-white/95 backdrop-blur flex items-center justify-center shadow-sm text-sm">
                                 ❤️
                             </span>
 
@@ -298,17 +320,6 @@
                             {{ $recipe->servings }}
                             {{ $recipe->servings == 1 ? 'serving' : 'servings' }}
                         </p>
-
-
-                        <!-- View -->
-
-                        <a
-                            href="{{ url('/recipes/' . $recipe->id) }}"
-                            class="w-full inline-flex items-center justify-center gap-2 bg-orange-500 text-white py-2.5 rounded-xl font-semibold hover:bg-orange-600 transition mt-6"
-                        >
-                            View Recipe
-                            <span>→</span>
-                        </a>
 
                     </div>
 
@@ -402,5 +413,167 @@
 @endif
 
 </div>
+
+
+<!-- ================================================= -->
+<!-- Add to Meal Plan Modal -->
+<!-- ================================================= -->
+
+<div
+    id="favouritesCardMealModal"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 px-4"
+>
+
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6">
+
+        <div class="flex items-start justify-between gap-4 mb-6">
+
+            <div>
+
+                <p class="text-xs font-semibold uppercase tracking-wider text-orange-500">
+                    Meal Planner
+                </p>
+
+                <h2 class="text-2xl font-bold text-gray-800 mt-1">
+                    Add to Meal Plan
+                </h2>
+
+                <p class="text-sm text-gray-500 mt-1" id="favouritesCardMealName"></p>
+
+            </div>
+
+
+            <button
+                type="button"
+                onclick="closeFavouritesCardMealModal()"
+                class="w-9 h-9 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition text-xl"
+                aria-label="Close"
+            >
+                &times;
+            </button>
+
+        </div>
+
+
+        <form
+            action="{{ url('/meal-planner') }}"
+            method="POST"
+        >
+
+            @csrf
+
+            <input
+                type="hidden"
+                name="recipe_id"
+                id="favouritesCardMealRecipeId"
+            >
+
+            <div class="mb-5">
+
+                <label
+                    for="favouritesCardMealDate"
+                    class="block text-sm font-semibold text-gray-700 mb-2"
+                >
+                    Date
+                </label>
+
+                <input
+                    type="date"
+                    name="date"
+                    id="favouritesCardMealDate"
+                    value="{{ now()->format('Y-m-d') }}"
+                    min="{{ now()->format('Y-m-d') }}"
+                    required
+                    class="w-full border border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-400"
+                >
+
+            </div>
+
+
+            <div class="mb-6">
+
+                <label
+                    for="favouritesCardMealType"
+                    class="block text-sm font-semibold text-gray-700 mb-2"
+                >
+                    Meal Type
+                </label>
+
+                <select
+                    name="meal_type"
+                    id="favouritesCardMealType"
+                    required
+                    class="w-full border border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-400"
+                >
+
+                    <option value="Breakfast">🍳 Breakfast</option>
+                    <option value="Lunch">🍱 Lunch</option>
+                    <option value="Dinner">🍽️ Dinner</option>
+
+                </select>
+
+            </div>
+
+
+            <div class="grid grid-cols-2 gap-3">
+
+                <button
+                    type="button"
+                    onclick="closeFavouritesCardMealModal()"
+                    class="bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 transition"
+                >
+                    Cancel
+                </button>
+
+
+                <button
+                    type="submit"
+                    class="bg-orange-500 text-white py-3 rounded-xl font-semibold hover:bg-orange-600 transition"
+                >
+                    Add to Plan
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<script>
+
+    /**
+     * Open the add-to-plan modal for a card, preselecting the meal type that
+     * best matches the recipe category.
+     */
+    function openFavouritesCardMealModal(recipeId, recipeName, category)
+    {
+        const modal = document.getElementById('favouritesCardMealModal');
+        const recipeIdInput = document.getElementById('favouritesCardMealRecipeId');
+        const nameLabel = document.getElementById('favouritesCardMealName');
+        const mealType = document.getElementById('favouritesCardMealType');
+
+        recipeIdInput.value = recipeId;
+        nameLabel.textContent = recipeName;
+
+        const validMealTypes = ['Breakfast', 'Lunch', 'Dinner'];
+
+        mealType.value = validMealTypes.includes(category) ? category : 'Lunch';
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+
+    function closeFavouritesCardMealModal()
+    {
+        const modal = document.getElementById('favouritesCardMealModal');
+
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+</script>
 
 @endsection

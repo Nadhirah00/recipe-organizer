@@ -124,7 +124,15 @@
                     data-match="{{ $result['percentage'] }}"
                 >
 
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="relative bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+
+                    <!-- Whole-card link, kept beneath the action icon -->
+
+                    <a
+                        href="{{ url('/recipes/' . $result['recipe']->id) }}"
+                        class="absolute inset-0 z-0"
+                        aria-label="View {{ $result['recipe']->name }}"
+                    ></a>
 
                     <div class="p-6">
 
@@ -178,7 +186,7 @@
                                     <div class="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
 
                                         <div
-                                            class="h-full bg-orange-500 rounded-full"
+                                            class="h-full bg-orange-500 rounded-full transition-all duration-500"
                                             style="width: {{ $result['percentage'] }}%"
                                         ></div>
 
@@ -196,32 +204,23 @@
                             </div>
 
 
-                            <!-- View Recipe -->
+                            <!-- Card Action -->
 
-                            <div>
+                            <div class="relative z-10 shrink-0">
 
-                                <div class="flex flex-col sm:flex-row gap-2">
-
-                                    <a
-                                        href="{{ url('/recipes/' . $result['recipe']->id) }}"
-                                        class="inline-flex items-center justify-center bg-orange-500 text-white px-5 py-3 rounded-xl font-semibold hover:bg-orange-600 transition"
-                                    >
-                                        View Recipe
-                                    </a>
-
-                                    <button
-                                        type="button"
-                                        onclick="openExploreMealModal(
-                                            {{ $recipe->id }},
-                                            @js($recipe->name),
-                                            @js($recipe->category)
-                                        )"
-                                        class="text-center border border-orange-200 text-orange-500 px-5 py-2.5 rounded-lg font-semibold hover:bg-orange-50 transition"
-                                    >
-                                        📅 Add to Meal Plan
-                                    </button>
-
-                                </div>
+                                <button
+                                    type="button"
+                                    onclick="openMealPlannerModal(
+                                        {{ $result['recipe']->id }},
+                                        @js($result['recipe']->name),
+                                        @js($result['recipe']->category)
+                                    )"
+                                    title="Add to meal plan"
+                                    aria-label="Add {{ $result['recipe']->name }} to meal plan"
+                                    class="w-9 h-9 inline-flex items-center justify-center bg-white/95 backdrop-blur text-gray-600 rounded-full shadow-sm text-sm hover:bg-orange-500 hover:text-white transition"
+                                >
+                                    📅
+                                </button>
 
                             </div>
 

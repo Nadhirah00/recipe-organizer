@@ -398,12 +398,20 @@
             @foreach ($recipes as $recipe)
 
                 <article
-                    class="group bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-lg transition duration-300"
+                    class="group relative bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-lg transition duration-300"
                 >
+
+                    <!-- Whole-card link, kept beneath the action icons -->
+
+                    <a
+                        href="{{ url('/recipes/' . $recipe->id) }}"
+                        class="absolute inset-0 z-0"
+                        aria-label="View {{ $recipe->name }}"
+                    ></a>
 
                     <!-- Image -->
 
-                    <div class="relative h-56 bg-orange-50 overflow-hidden">
+                    <div class="relative h-52 bg-orange-50 overflow-hidden">
 
                         @if ($recipe->image)
 
@@ -443,6 +451,52 @@
                                 </span>
 
                             @endif
+
+                        </div>
+
+
+                        <!-- Card Actions -->
+
+                        <div class="absolute top-4 right-4 z-10 flex items-center gap-1.5">
+
+                            <button
+                                type="button"
+                                onclick="openRecipeCardMealModal({{ $recipe->id }}, @js($recipe->name), @js($recipe->category))"
+                                title="Add to meal plan"
+                                aria-label="Add {{ $recipe->name }} to meal plan"
+                                class="w-9 h-9 inline-flex items-center justify-center bg-white/95 backdrop-blur text-gray-600 rounded-full shadow-sm text-sm hover:bg-orange-500 hover:text-white transition"
+                            >
+                                📅
+                            </button>
+
+                            <a
+                                href="{{ url('/recipes/' . $recipe->id . '/edit') }}"
+                                title="Edit recipe"
+                                aria-label="Edit {{ $recipe->name }}"
+                                class="w-9 h-9 inline-flex items-center justify-center bg-white/95 backdrop-blur text-gray-600 rounded-full shadow-sm text-sm hover:bg-orange-500 hover:text-white transition"
+                            >
+                                ✏️
+                            </a>
+
+                            <form
+                                action="{{ url('/recipes/' . $recipe->id) }}"
+                                method="POST"
+                            >
+
+                                @csrf
+                                @method('DELETE')
+
+                                <button
+                                    type="submit"
+                                    onclick="return confirm('Are you sure you want to delete this recipe?')"
+                                    title="Delete recipe"
+                                    aria-label="Delete {{ $recipe->name }}"
+                                    class="w-9 h-9 inline-flex items-center justify-center bg-white/95 backdrop-blur text-gray-600 rounded-full shadow-sm text-sm hover:bg-red-500 hover:text-white transition"
+                                >
+                                    🗑
+                                </button>
+
+                            </form>
 
                         </div>
 
@@ -506,59 +560,7 @@
 
                         </div>
 
-                        <!-- Servings -->
-
-                        <div class="flex items-center justify-between mt-4 text-sm text-gray-500">
-
-                            <span>
-                                👥
-                                {{ $recipe->servings }}
-                                {{ $recipe->servings == 1 ? 'serving' : 'servings' }}
-                            </span>
-
-                        </div>
-
-                        <!-- Actions -->
-
-                        <div class="grid grid-cols-2 gap-2 mt-6">
-
-                            <a
-                                href="{{ url('/recipes/' . $recipe->id) }}"
-                                class="inline-flex items-center justify-center gap-2 bg-orange-500 text-white py-2.5 rounded-xl font-semibold hover:bg-orange-600 transition"
-                            >
-                                View
-                                <span>→</span>
-                            </a>
-
-                            <a
-                                href="{{ url('/recipes/' . $recipe->id . '/edit') }}"
-                                class="inline-flex items-center justify-center gap-2 bg-gray-800 text-white py-2.5 rounded-xl font-semibold hover:bg-gray-700 transition"
-                            >
-                                ✏️ Edit
-                            </a>
-
-                        </div>
-
-                        <!-- Delete -->
-
-                        <form
-                            action="{{ url('/recipes/' . $recipe->id) }}"
-                            method="POST"
-                            class="mt-2"
-                        >
-
-                            @csrf
-                            @method('DELETE')
-
-                            <button
-                                type="submit"
-                                onclick="return confirm('Are you sure you want to delete this recipe?')"
-                                class="w-full inline-flex items-center justify-center gap-2 border border-red-200 text-red-500 py-2.5 rounded-xl font-semibold hover:bg-red-50 transition"
-                            >
-                                🗑 Delete Recipe
-                            </button>
-
-                        </form>
+                        
 
                     </div>
 
@@ -683,5 +685,167 @@
         @endif
 
 </div>
+
+
+<!-- ================================================= -->
+<!-- Add to Meal Plan Modal -->
+<!-- ================================================= -->
+
+<div
+    id="recipeCardMealModal"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 px-4"
+>
+
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6">
+
+        <div class="flex items-start justify-between gap-4 mb-6">
+
+            <div>
+
+                <p class="text-xs font-semibold uppercase tracking-wider text-orange-500">
+                    Meal Planner
+                </p>
+
+                <h2 class="text-2xl font-bold text-gray-800 mt-1">
+                    Add to Meal Plan
+                </h2>
+
+                <p class="text-sm text-gray-500 mt-1" id="recipeCardMealName"></p>
+
+            </div>
+
+
+            <button
+                type="button"
+                onclick="closeRecipeCardMealModal()"
+                class="w-9 h-9 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition text-xl"
+                aria-label="Close"
+            >
+                &times;
+            </button>
+
+        </div>
+
+
+        <form
+            action="{{ url('/meal-planner') }}"
+            method="POST"
+        >
+
+            @csrf
+
+            <input
+                type="hidden"
+                name="recipe_id"
+                id="recipeCardMealRecipeId"
+            >
+
+            <div class="mb-5">
+
+                <label
+                    for="recipeCardMealDate"
+                    class="block text-sm font-semibold text-gray-700 mb-2"
+                >
+                    Date
+                </label>
+
+                <input
+                    type="date"
+                    name="date"
+                    id="recipeCardMealDate"
+                    value="{{ now()->format('Y-m-d') }}"
+                    min="{{ now()->format('Y-m-d') }}"
+                    required
+                    class="w-full border border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-400"
+                >
+
+            </div>
+
+
+            <div class="mb-6">
+
+                <label
+                    for="recipeCardMealType"
+                    class="block text-sm font-semibold text-gray-700 mb-2"
+                >
+                    Meal Type
+                </label>
+
+                <select
+                    name="meal_type"
+                    id="recipeCardMealType"
+                    required
+                    class="w-full border border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-400"
+                >
+
+                    <option value="Breakfast">🍳 Breakfast</option>
+                    <option value="Lunch">🍱 Lunch</option>
+                    <option value="Dinner">🍽️ Dinner</option>
+
+                </select>
+
+            </div>
+
+
+            <div class="grid grid-cols-2 gap-3">
+
+                <button
+                    type="button"
+                    onclick="closeRecipeCardMealModal()"
+                    class="bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 transition"
+                >
+                    Cancel
+                </button>
+
+
+                <button
+                    type="submit"
+                    class="bg-orange-500 text-white py-3 rounded-xl font-semibold hover:bg-orange-600 transition"
+                >
+                    Add to Plan
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<script>
+
+    /**
+     * Open the add-to-plan modal for a card, preselecting the meal type that
+     * best matches the recipe category.
+     */
+    function openRecipeCardMealModal(recipeId, recipeName, category)
+    {
+        const modal = document.getElementById('recipeCardMealModal');
+        const recipeIdInput = document.getElementById('recipeCardMealRecipeId');
+        const nameLabel = document.getElementById('recipeCardMealName');
+        const mealType = document.getElementById('recipeCardMealType');
+
+        recipeIdInput.value = recipeId;
+        nameLabel.textContent = recipeName;
+
+        const validMealTypes = ['Breakfast', 'Lunch', 'Dinner'];
+
+        mealType.value = validMealTypes.includes(category) ? category : 'Lunch';
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+
+    function closeRecipeCardMealModal()
+    {
+        const modal = document.getElementById('recipeCardMealModal');
+
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+</script>
 
 @endsection
