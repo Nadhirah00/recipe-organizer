@@ -20,7 +20,6 @@ class ShoppingListController extends Controller
     {
         $user = Auth::user();
 
-
         /*
         |--------------------------------------------------------------------------
         | Selected Week
@@ -32,7 +31,6 @@ class ShoppingListController extends Controller
             : now()->startOfWeek();
 
         $endOfWeek = $startOfWeek->copy()->addDays(6);
-
 
         /*
         |--------------------------------------------------------------------------
@@ -47,7 +45,6 @@ class ShoppingListController extends Controller
                 $endOfWeek->toDateString(),
             ])
             ->get();
-
 
         /*
         |--------------------------------------------------------------------------
@@ -66,7 +63,6 @@ class ShoppingListController extends Controller
             )
             ->get();
 
-
         /*
         |--------------------------------------------------------------------------
         | Group ingredients by recipe
@@ -76,7 +72,6 @@ class ShoppingListController extends Controller
         $groupedLists = $shoppingLists->groupBy(
             'recipe_id'
         );
-
 
         /*
         |--------------------------------------------------------------------------
@@ -92,14 +87,12 @@ class ShoppingListController extends Controller
                 ->where('is_checked', true)
                 ->count();
 
-
         $shoppingPercentage =
             $shoppingTotal > 0
                 ? round(
                     ($shoppingCompleted / $shoppingTotal) * 100
                 )
                 : 0;
-
 
         return view(
             'shopping-lists.index',
@@ -116,7 +109,6 @@ class ShoppingListController extends Controller
         );
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | Generate Shopping List
@@ -126,7 +118,6 @@ class ShoppingListController extends Controller
     public function generate(Request $request)
     {
         $user = Auth::user();
-
 
         /*
         |--------------------------------------------------------------------------
@@ -140,7 +131,6 @@ class ShoppingListController extends Controller
 
         $endOfWeek =
             $startOfWeek->copy()->addDays(6);
-
 
         /*
         |--------------------------------------------------------------------------
@@ -156,7 +146,6 @@ class ShoppingListController extends Controller
             ])
             ->get();
 
-
         /*
         |--------------------------------------------------------------------------
         | No meals
@@ -166,14 +155,13 @@ class ShoppingListController extends Controller
         if ($mealPlans->isEmpty()) {
 
             return redirect(
-                '/shopping-list?week=' .
+                '/shopping-list?week='.
                 $startOfWeek->format('Y-m-d')
             )->with(
                 'error',
                 'No meals are planned for this week. Please plan some meals first.'
             );
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -189,12 +177,11 @@ class ShoppingListController extends Controller
             'user_id',
             $user->id
         )
-        ->whereDate(
-            'week_start',
-            $startOfWeek->toDateString()
-        )
-        ->delete();
-
+            ->whereDate(
+                'week_start',
+                $startOfWeek->toDateString()
+            )
+            ->delete();
 
         /*
         |--------------------------------------------------------------------------
@@ -208,20 +195,18 @@ class ShoppingListController extends Controller
             $mealPlans
         );
 
-
         return redirect(
-            '/shopping-list?week=' .
+            '/shopping-list?week='.
             $startOfWeek->format('Y-m-d')
         )->with(
             'success',
-            'Shopping list generated for ' .
-            $startOfWeek->format('d M') .
-            ' - ' .
-            $endOfWeek->format('d M Y') .
+            'Shopping list generated for '.
+            $startOfWeek->format('d M').
+            ' - '.
+            $endOfWeek->format('d M Y').
             '.'
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -230,29 +215,25 @@ class ShoppingListController extends Controller
     */
 
     private function createShoppingList(
-    int $userId,
-    Carbon $startOfWeek,
-    $mealPlans
+        int $userId,
+        Carbon $startOfWeek,
+        $mealPlans
     ): void {
 
         $savedIngredients = [];
 
-
         foreach ($mealPlans as $mealPlan) {
 
-            if (!$mealPlan->recipe) {
+            if (! $mealPlan->recipe) {
                 continue;
             }
 
-
             $recipeId = $mealPlan->recipe->id;
-
 
             $recipeIngredients = preg_split(
                 '/\r\n|\r|\n/',
                 $mealPlan->recipe->ingredients
             );
-
 
             foreach ($recipeIngredients as $ingredient) {
 
@@ -262,11 +243,9 @@ class ShoppingListController extends Controller
                     continue;
                 }
 
-
                 $parsed = $this->parseIngredient(
                     $ingredient
                 );
-
 
                 $ingredientName =
                     trim($parsed['ingredient']);
@@ -274,25 +253,20 @@ class ShoppingListController extends Controller
                 $quantity =
                     $parsed['quantity'];
 
-
                 if ($ingredientName === '') {
                     continue;
                 }
 
-
                 $key =
-                    $recipeId .
-                    '|' .
+                    $recipeId.
+                    '|'.
                     strtolower($ingredientName);
-
 
                 if (isset($savedIngredients[$key])) {
                     continue;
                 }
 
-
                 $savedIngredients[$key] = true;
-
 
                 ShoppingList::create([
                     'user_id' => $userId,
@@ -354,7 +328,6 @@ class ShoppingListController extends Controller
             (?:of\s+)?
         ~ix';
 
-
         if (preg_match(
             $pattern,
             $ingredient,
@@ -362,14 +335,13 @@ class ShoppingListController extends Controller
         )) {
 
             $quantity = trim(
-                $matches[1] .
+                $matches[1].
                 (
-                    !empty($matches[2])
-                        ? ' ' . trim($matches[2])
+                    ! empty($matches[2])
+                        ? ' '.trim($matches[2])
                         : ''
                 )
             );
-
 
             $name = trim(
                 preg_replace(
@@ -380,19 +352,17 @@ class ShoppingListController extends Controller
                 )
             );
 
-
             return [
                 'ingredient' => $name,
                 'quantity' => $quantity,
             ];
         }
 
-
         return [
             'ingredient' => $ingredient,
             'quantity' => null,
         ];
-        }
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -407,18 +377,51 @@ class ShoppingListController extends Controller
             Auth::id()
         )->findOrFail($id);
 
-
         $item->update([
-            'is_checked' => !$item->is_checked,
+            'is_checked' => ! $item->is_checked,
         ]);
 
+        /*
+        |--------------------------------------------------------------------------
+        | Recalculate progress for the affected week
+        |--------------------------------------------------------------------------
+        */
+
+        $userId = Auth::id();
+
+        $total = ShoppingList::where(
+            'user_id',
+            $userId
+        )
+            ->whereDate(
+                'week_start',
+                $item->week_start->toDateString()
+            )
+            ->count();
+
+        $completed = ShoppingList::where(
+            'user_id',
+            $userId
+        )
+            ->whereDate(
+                'week_start',
+                $item->week_start->toDateString()
+            )
+            ->where('is_checked', true)
+            ->count();
+
+        $percentage = $total > 0
+            ? round(($completed / $total) * 100)
+            : 0;
 
         return response()->json([
             'success' => true,
             'is_checked' => $item->is_checked,
+            'total' => $total,
+            'completed' => $completed,
+            'percentage' => $percentage,
         ]);
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -433,16 +436,13 @@ class ShoppingListController extends Controller
             Auth::id()
         )->findOrFail($id);
 
-
         $item->delete();
-
 
         return back()->with(
             'success',
             'Ingredient removed from shopping list.'
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -456,20 +456,18 @@ class ShoppingListController extends Controller
             ? Carbon::parse($request->week)->startOfWeek()
             : now()->startOfWeek();
 
-
         ShoppingList::where(
             'user_id',
             Auth::id()
         )
-        ->whereDate(
-            'week_start',
-            $startOfWeek->toDateString()
-        )
-        ->delete();
-
+            ->whereDate(
+                'week_start',
+                $startOfWeek->toDateString()
+            )
+            ->delete();
 
         return redirect(
-            '/shopping-list?week=' .
+            '/shopping-list?week='.
             $startOfWeek->format('Y-m-d')
         )->with(
             'success',

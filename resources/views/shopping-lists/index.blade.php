@@ -163,7 +163,10 @@
                     Your Shopping Checklist
                 </h2>
 
-                <p class="text-sm text-gray-500 mt-1">
+                <p
+                    id="shoppingSummaryText"
+                    class="text-sm text-gray-500 mt-1"
+                >
                     {{ $shoppingCompleted }}
                     of
                     {{ $shoppingTotal }}
@@ -175,7 +178,10 @@
 
             <div class="text-right">
 
-                <p class="text-3xl font-bold text-green-500">
+                <p
+                    id="shoppingPercentageText"
+                    class="text-3xl font-bold text-green-500"
+                >
                     {{ $shoppingPercentage }}%
                 </p>
 
@@ -191,6 +197,7 @@
         <div class="h-3 bg-green-50 rounded-full overflow-hidden mt-5">
 
             <div
+                id="shoppingProgressBar"
                 class="h-full bg-green-500 rounded-full transition-all duration-500"
                 style="width: {{ $shoppingPercentage }}%"
             ></div>
@@ -520,6 +527,8 @@
                 throw new Error(`Request failed: ${response.status}`);
             }
 
+            const data = await response.json();
+
             // Update the appearance without reloading the page
             if (checkbox.checked) {
                 ingredient.classList.remove('text-gray-800');
@@ -527,6 +536,26 @@
             } else {
                 ingredient.classList.remove('text-gray-400', 'line-through');
                 ingredient.classList.add('text-gray-800');
+            }
+
+            // Update the progress indicator
+            if (typeof data.total === 'number') {
+                const summary = document.getElementById('shoppingSummaryText');
+                const percentage = document.getElementById('shoppingPercentageText');
+                const bar = document.getElementById('shoppingProgressBar');
+
+                if (summary) {
+                    summary.textContent =
+                        `${data.completed} of ${data.total} items completed`;
+                }
+
+                if (percentage) {
+                    percentage.textContent = `${data.percentage}%`;
+                }
+
+                if (bar) {
+                    bar.style.width = `${data.percentage}%`;
+                }
             }
 
         } catch (error) {
