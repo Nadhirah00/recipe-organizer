@@ -313,14 +313,43 @@
                 </p>
 
 
-                <a
-                    href="{{ $recipe->tutorial_url }}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="inline-flex items-center gap-2 bg-red-500 text-white px-5 py-3 rounded-xl font-semibold hover:bg-red-600 transition mt-5"
-                >
-                    ▶ Watch Tutorial
-                </a>
+                @if ($embedUrl = $recipe->youtubeEmbedUrl())
+
+                    <div class="mt-5 aspect-video rounded-2xl overflow-hidden bg-gray-900 shadow-sm">
+
+                        <iframe
+                            src="{{ $embedUrl }}"
+                            title="{{ $recipe->name }} video tutorial"
+                            class="w-full h-full"
+                            loading="lazy"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            referrerpolicy="strict-origin-when-cross-origin"
+                            allowfullscreen
+                        ></iframe>
+
+                    </div>
+
+                    <a
+                        href="{{ $recipe->tutorial_url }}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="inline-block text-sm text-gray-500 hover:text-gray-700 underline underline-offset-4 mt-3"
+                    >
+                        Watch on YouTube
+                    </a>
+
+                @else
+
+                    <a
+                        href="{{ $recipe->tutorial_url }}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="inline-flex items-center gap-2 bg-red-500 text-white px-5 py-3 rounded-xl font-semibold hover:bg-red-600 transition mt-5"
+                    >
+                        ▶ Watch Tutorial
+                    </a>
+
+                @endif
 
             </section>
 
