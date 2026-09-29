@@ -12,14 +12,28 @@ class DatabaseSeeder extends Seeder
 
     /**
      * Seed the application's database.
+     *
+     * Maisara is created first so she stays the owner of the seeded recipes,
+     * which both recipe seeders assign to User::first().
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        User::factory()->create([
+            'name' => 'Maisara',
+            'email' => 'S71297@ocean.umt.edu.my',
+        ]);
 
         User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+
+        $this->call([
+            NineMoreRecipesSeeder::class,
+            RecipeSeeder::class,
+        ]);
+
+        $this->call(ExistingRecipeVisibilitySeeder::class);
+        $this->call(AdditionalUsersRecipesSeeder::class);
     }
 }
