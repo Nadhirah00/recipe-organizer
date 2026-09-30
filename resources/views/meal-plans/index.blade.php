@@ -26,14 +26,6 @@
 
         </div>
 
-
-        <a
-            href="{{ url('/recipes') }}"
-            class="inline-flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-orange-500 transition"
-        >
-            🍽️ My Recipes →
-        </a>
-
         </div>
 
         <!-- Planner Controls -->
@@ -629,6 +621,18 @@
         name="recipe_id"
         id="selectedRecipeId"
         required
+    >
+
+    {{--
+        The planner grid's "Change" button is already an explicit request to
+        swap the recipe in this slot, and "Add Meal" only renders on empty
+        cells, so replacing is always pre-authorised here.
+    --}}
+
+    <input
+        type="hidden"
+        name="replace"
+        value="1"
     >
 
     <input

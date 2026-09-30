@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Favorite;
 use App\Models\MealPlan;
 use App\Models\Recipe;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Favorite;
 use App\Models\ShoppingList;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class MealPlanController extends Controller
 {
@@ -25,14 +25,13 @@ class MealPlanController extends Controller
         */
 
         if ($request->filled('week')) {
-            $startOfWeek = \Carbon\Carbon::parse($request->week)
+            $startOfWeek = Carbon::parse($request->week)
                 ->startOfWeek();
         } else {
             $startOfWeek = now()->startOfWeek();
         }
 
         $endOfWeek = $startOfWeek->copy()->addDays(6);
-
 
         /*
         |--------------------------------------------------------------------------
@@ -50,7 +49,6 @@ class MealPlanController extends Controller
 
         }
 
-
         /*
         |--------------------------------------------------------------------------
         | Get meals for selected week
@@ -65,7 +63,6 @@ class MealPlanController extends Controller
             ])
             ->get();
 
-
         /*
         |--------------------------------------------------------------------------
         | Easy lookup
@@ -75,11 +72,10 @@ class MealPlanController extends Controller
         $mealPlanMap = $mealPlans->keyBy(function ($meal) {
 
             return $meal->date->format('Y-m-d')
-                . '_' .
+                .'_'.
                 $meal->meal_type;
 
         });
-
 
         return view('meal-plans.index', compact(
             'recipes',
@@ -97,32 +93,63 @@ class MealPlanController extends Controller
             'recipe_id' => 'required|integer|exists:recipes,id',
             'date' => 'required|date',
             'meal_type' => 'required|in:Breakfast,Lunch,Dinner',
+            'replace' => 'sometimes|boolean',
         ]);
 
         $recipe = Recipe::where('id', $validated['recipe_id'])
-        ->where(function ($q) {
+            ->where(function ($q) {
 
-            $q->where(
-                'user_id',
-                Auth::id()
-            )
-            ->orWhere(
-                'is_public',
-                true
-            );
+                $q->where(
+                    'user_id',
+                    Auth::id()
+                )
+                    ->orWhere(
+                        'is_public',
+                        true
+                    );
 
-        })
-        ->firstOrFail();
+            })
+            ->firstOrFail();
 
         // Check whether this date + meal already has a recipe
 
-        $existingMeal = MealPlan::where('user_id', Auth::id())
-            ->where('date', $validated['date'])
+        $existingMeal = MealPlan::with('recipe')
+            ->where('user_id', Auth::id())
+            ->whereDate('date', $validated['date'])
             ->where('meal_type', $validated['meal_type'])
             ->first();
 
-
         if ($existingMeal) {
+
+            if (! $request->boolean('replace')) {
+
+                $message = sprintf(
+                    '%s on %s is already planned as "%s". Confirm the replacement to continue.',
+                    $validated['meal_type'],
+                    Carbon::parse($validated['date'])->format('j M Y'),
+                    $existingMeal->recipe->name
+                );
+
+                if ($request->wantsJson()) {
+
+                    return response()->json([
+                        'message' => $message,
+                        'conflict' => [
+                            'meal_plan_id' => $existingMeal->id,
+                            'date' => $existingMeal->date->format('Y-m-d'),
+                            'meal_type' => $existingMeal->meal_type,
+                            'recipe' => [
+                                'id' => $existingMeal->recipe->id,
+                                'name' => $existingMeal->recipe->name,
+                            ],
+                        ],
+                    ], 409);
+                }
+
+                return back()
+                    ->withInput()
+                    ->with('error', $message);
+            }
 
             $existingMeal->update([
                 'recipe_id' => $recipe->id,
@@ -133,16 +160,20 @@ class MealPlanController extends Controller
             );
 
             return redirect(
-                '/meal-planner?week=' .
-                \Carbon\Carbon::parse($validated['date'])
+                '/meal-planner?week='.
+                Carbon::parse($validated['date'])
                     ->startOfWeek()
                     ->format('Y-m-d')
             )->with(
                 'success',
-                'Meal updated successfully!'
+                sprintf(
+                    '%s on %s was replaced with "%s".',
+                    $validated['meal_type'],
+                    Carbon::parse($validated['date'])->format('j M Y'),
+                    $recipe->name
+                )
             );
         }
-
 
         MealPlan::create([
             'user_id' => Auth::id(),
@@ -156,13 +187,41 @@ class MealPlanController extends Controller
         );
 
         return redirect(
-            '/meal-planner?week=' .
-            \Carbon\Carbon::parse($validated['date'])
+            '/meal-planner?week='.
+            Carbon::parse($validated['date'])
                 ->startOfWeek()
                 ->format('Y-m-d')
         )->with(
             'success',
             'Meal added to your plan!');
+    }
+
+    /**
+     * Report whether a date + meal type slot is already taken, so the
+     * add-to-plan modals can ask the user before replacing a planned meal.
+     */
+    public function slotStatus(Request $request)
+    {
+        $validated = $request->validate([
+            'date' => 'required|date',
+            'meal_type' => 'required|in:Breakfast,Lunch,Dinner',
+        ]);
+
+        $existingMeal = MealPlan::with('recipe')
+            ->where('user_id', Auth::id())
+            ->whereDate('date', $validated['date'])
+            ->where('meal_type', $validated['meal_type'])
+            ->first();
+
+        return response()->json([
+            'occupied' => $existingMeal !== null,
+            'date' => $validated['date'],
+            'meal_type' => $validated['meal_type'],
+            'recipe' => $existingMeal ? [
+                'id' => $existingMeal->recipe->id,
+                'name' => $existingMeal->recipe->name,
+            ] : null,
+        ]);
     }
 
     public function destroy($id)
@@ -180,7 +239,7 @@ class MealPlanController extends Controller
             $startOfWeek
         );
 
-        return redirect('/meal-planner?week=' .
+        return redirect('/meal-planner?week='.
             $startOfWeek->format('Y-m-d')
         )->with('success', 'Meal removed from your plan.');
     }
@@ -188,7 +247,7 @@ class MealPlanController extends Controller
     public function clear(Request $request)
     {
         $startOfWeek = $request->filled('week')
-            ? \Carbon\Carbon::parse($request->week)->startOfWeek()
+            ? Carbon::parse($request->week)->startOfWeek()
             : now()->startOfWeek();
 
         $endOfWeek = $startOfWeek->copy()->addDays(6);
@@ -207,7 +266,7 @@ class MealPlanController extends Controller
         )->delete();
 
         return redirect(
-            '/meal-planner?week=' . $startOfWeek->format('Y-m-d')
+            '/meal-planner?week='.$startOfWeek->format('Y-m-d')
         )->with(
             'success',
             'All meals for the selected week have been cleared.'
@@ -218,12 +277,11 @@ class MealPlanController extends Controller
     {
         $query = Recipe::where(function ($q) {
             $q->where('user_id', Auth::id())
-            ->orWhere('is_public', true);
+                ->orWhere('is_public', true);
         });
 
         $mealType = $request->input('meal_type');
         $currentRecipeId = $request->input('current_recipe_id');
-
 
         /*
         |--------------------------------------------------------------------------
@@ -237,13 +295,12 @@ class MealPlanController extends Controller
 
             $query->where(function ($q) use ($search) {
 
-                $q->where('name', 'like', '%' . $search . '%')
-                    ->orWhere('description', 'like', '%' . $search . '%')
-                    ->orWhere('ingredients', 'like', '%' . $search . '%');
+                $q->where('name', 'like', '%'.$search.'%')
+                    ->orWhere('description', 'like', '%'.$search.'%')
+                    ->orWhere('ingredients', 'like', '%'.$search.'%');
 
             });
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -259,7 +316,6 @@ class MealPlanController extends Controller
             );
         }
 
-
         /*
         |--------------------------------------------------------------------------
         | Difficulty filter
@@ -273,7 +329,6 @@ class MealPlanController extends Controller
                 $request->difficulty
             );
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -289,7 +344,6 @@ class MealPlanController extends Controller
                 $request->max_time
             );
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -310,7 +364,6 @@ class MealPlanController extends Controller
             );
         }
 
-
         /*
         |--------------------------------------------------------------------------
         | Exclude current recipe when changing
@@ -326,7 +379,6 @@ class MealPlanController extends Controller
             );
         }
 
-
         /*
         |--------------------------------------------------------------------------
         | Prioritize recipes matching the meal type
@@ -336,14 +388,13 @@ class MealPlanController extends Controller
         if ($mealType) {
 
             $query->orderByRaw(
-                "CASE
+                'CASE
                     WHEN category = ? THEN 0
                     ELSE 1
-                END",
+                END',
                 [$mealType]
             );
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -358,8 +409,7 @@ class MealPlanController extends Controller
             $request->filled('max_time') ||
             $request->boolean('favorites');
 
-
-        if (!$hasFilters) {
+        if (! $hasFilters) {
 
             $recipes = $query
                 ->latest()
@@ -374,7 +424,6 @@ class MealPlanController extends Controller
                 ->get();
         }
 
-
         return response()->json([
             'data' => $recipes,
             'total' => $recipes->count(),
@@ -386,7 +435,6 @@ class MealPlanController extends Controller
         $userId = Auth::id();
 
         $endOfWeek = $startOfWeek->copy()->addDays(6);
-
 
         /*
         |--------------------------------------------------------------------------
@@ -402,7 +450,6 @@ class MealPlanController extends Controller
             ])
             ->get();
 
-
         /*
         |--------------------------------------------------------------------------
         | Get existing shopping list
@@ -413,12 +460,11 @@ class MealPlanController extends Controller
             'user_id',
             $userId
         )
-        ->whereDate(
-            'week_start',
-            $startOfWeek->toDateString()
-        )
-        ->get();
-
+            ->whereDate(
+                'week_start',
+                $startOfWeek->toDateString()
+            )
+            ->get();
 
         /*
         |--------------------------------------------------------------------------
@@ -438,14 +484,13 @@ class MealPlanController extends Controller
             if ($item->is_checked) {
 
                 $key =
-                    $item->recipe_id .
-                    '|' .
+                    $item->recipe_id.
+                    '|'.
                     strtolower(trim($item->ingredient));
 
                 $checkedItems[$key] = true;
             }
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -457,7 +502,6 @@ class MealPlanController extends Controller
             return;
         }
 
-
         /*
         |--------------------------------------------------------------------------
         | Rebuild the selected week's shopping list
@@ -468,12 +512,11 @@ class MealPlanController extends Controller
             'user_id',
             $userId
         )
-        ->whereDate(
-            'week_start',
-            $startOfWeek->toDateString()
-        )
-        ->delete();
-
+            ->whereDate(
+                'week_start',
+                $startOfWeek->toDateString()
+            )
+            ->delete();
 
         /*
         |--------------------------------------------------------------------------
@@ -483,22 +526,18 @@ class MealPlanController extends Controller
 
         $savedIngredients = [];
 
-
         foreach ($mealPlans as $mealPlan) {
 
-            if (!$mealPlan->recipe) {
+            if (! $mealPlan->recipe) {
                 continue;
             }
 
-
             $recipeId = $mealPlan->recipe->id;
-
 
             $ingredients = preg_split(
                 '/\r\n|\r|\n/',
                 $mealPlan->recipe->ingredients
             );
-
 
             foreach ($ingredients as $ingredient) {
 
@@ -508,7 +547,6 @@ class MealPlanController extends Controller
                     continue;
                 }
 
-
                 /*
                 |--------------------------------------------------------------------------
                 | Same recipe + same ingredient = one shopping item
@@ -516,18 +554,15 @@ class MealPlanController extends Controller
                 */
 
                 $key =
-                    $recipeId .
-                    '|' .
+                    $recipeId.
+                    '|'.
                     strtolower($ingredient);
-
 
                 if (isset($savedIngredients[$key])) {
                     continue;
                 }
 
-
                 $savedIngredients[$key] = true;
-
 
                 /*
                 |--------------------------------------------------------------------------
@@ -537,7 +572,6 @@ class MealPlanController extends Controller
 
                 $wasChecked =
                     $checkedItems[$key] ?? false;
-
 
                 ShoppingList::create([
                     'user_id' => $userId,
@@ -550,5 +584,4 @@ class MealPlanController extends Controller
             }
         }
     }
-
 }

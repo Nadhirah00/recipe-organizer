@@ -1219,6 +1219,9 @@ Garlic"
 
 
         <form
+            id="exploreMealForm"
+            data-meal-slot-check="{{ route('meal-planner.slots.check') }}"
+            data-meal-plan-submit
             action="{{ url('/meal-planner') }}"
             method="POST"
         >
@@ -1229,6 +1232,12 @@ Garlic"
                 type="hidden"
                 name="recipe_id"
                 id="exploreRecipeId"
+            >
+
+            <input
+                type="hidden"
+                name="replace"
+                value="0"
             >
 
 
@@ -1291,6 +1300,29 @@ Garlic"
             </div>
 
 
+            <!-- Existing Meal Warning -->
+
+            <div
+                data-meal-slot-warning
+                role="status"
+                class="hidden mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"
+            >
+
+                <p
+                    data-meal-slot-title
+                    class="text-sm font-semibold text-amber-800"
+                >
+                </p>
+
+                <p
+                    data-meal-slot-message
+                    class="text-sm text-amber-700 mt-1"
+                >
+                </p>
+
+            </div>
+
+
             <div class="flex gap-3">
 
                 <button
@@ -1303,6 +1335,8 @@ Garlic"
 
                 <button
                     type="submit"
+                    data-meal-slot-submit
+                    data-default-label="Add to Plan"
                     class="flex-1 bg-orange-500 text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition"
                 >
                     Add to Plan
@@ -1378,6 +1412,8 @@ Garlic"
 
         modal.classList.remove('hidden');
         modal.classList.add('flex');
+
+        refreshMealSlot('exploreMealForm');
     }
 
 

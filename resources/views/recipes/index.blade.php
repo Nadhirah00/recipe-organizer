@@ -712,6 +712,9 @@
 
 
         <form
+            id="recipeCardMealForm"
+            data-meal-slot-check="{{ route('meal-planner.slots.check') }}"
+            data-meal-plan-submit
             action="{{ url('/meal-planner') }}"
             method="POST"
         >
@@ -722,6 +725,12 @@
                 type="hidden"
                 name="recipe_id"
                 id="recipeCardMealRecipeId"
+            >
+
+            <input
+                type="hidden"
+                name="replace"
+                value="0"
             >
 
             <div class="mb-5">
@@ -764,32 +773,58 @@
 
                     <option value="Breakfast">🍳 Breakfast</option>
                     <option value="Lunch">🍱 Lunch</option>
-                    <option value="Dinner">🍽️ Dinner</option>
+                <option value="Dinner">🍽️ Dinner</option>
 
-                </select>
+            </select>
 
-            </div>
-
-
-            <div class="grid grid-cols-2 gap-3">
-
-                <button
-                    type="button"
-                    onclick="closeRecipeCardMealModal()"
-                    class="bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 transition"
-                >
-                    Cancel
-                </button>
+        </div>
 
 
-                <button
-                    type="submit"
-                    class="bg-orange-500 text-white py-3 rounded-xl font-semibold hover:bg-orange-600 transition"
-                >
-                    Add to Plan
-                </button>
+        <!-- Existing Meal Warning -->
 
-            </div>
+        <div
+            data-meal-slot-warning
+            role="status"
+            class="hidden mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"
+        >
+
+            <p
+                data-meal-slot-title
+                class="text-sm font-semibold text-amber-800"
+            >
+            </p>
+
+            <p
+                data-meal-slot-message
+                class="text-sm text-amber-700 mt-1"
+            >
+            </p>
+
+        </div>
+
+
+        <div class="grid grid-cols-2 gap-3">
+
+            <button
+                type="button"
+                onclick="closeRecipeCardMealModal()"
+                class="bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 transition"
+            >
+                Cancel
+            </button>
+
+
+            <button
+                type="submit"
+                data-meal-slot-submit
+                data-default-label="Add to Plan"
+                class="bg-orange-500 text-white py-3 rounded-xl font-semibold hover:bg-orange-600 transition"
+            >
+                Add to Plan
+            </button>
+
+        </div>
+
 
         </form>
 
@@ -819,6 +854,8 @@
 
         modal.classList.remove('hidden');
         modal.classList.add('flex');
+
+        refreshMealSlot('recipeCardMealForm');
     }
 
 
