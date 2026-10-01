@@ -84,28 +84,87 @@
 
         @if ($mealPlans->isNotEmpty())
 
-            <form
-                action="{{ url('/shopping-list/generate') }}"
-                method="POST"
-            >
-
-                @csrf
-
-                <input
-                    type="hidden"
-                    name="week"
-                    value="{{ $startOfWeek->format('Y-m-d') }}"
-                >
-
+            <div class="flex flex-wrap items-center gap-3">
 
                 <button
-                    type="submit"
-                    class="inline-flex items-center justify-center gap-2 bg-green-500 text-white px-5 py-3 rounded-xl font-semibold hover:bg-green-600 transition"
+                    type="button"
+                    id="toggleAllSections"
+                    data-toggle-all
+                    aria-controls="shopping-list-sections"
+                    title="Hide the ingredient list for every recipe"
+                    class="inline-flex items-center gap-2 border border-gray-200 bg-white text-gray-600 px-4 py-2.5 rounded-xl font-semibold hover:border-orange-300 hover:text-orange-500 transition"
                 >
-                    🔄 Refresh List
+                    <span
+                        data-toggle-all-icon
+                        aria-hidden="true"
+                        class="inline-flex shrink-0"
+                    >
+                        <svg
+                            data-toggle-all-icon="hide"
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="w-4 h-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M3 3l18 18M10.6 10.6a3 3 0 004.2 4.2M9.4 5.3A9.7 9.7 0 0112 5c7 0 10 7 10 7a17.6 17.6 0 01-2.4 3.3M6.2 6.2A17.6 17.6 0 002 12s3 7 10 7a9.8 9.8 0 005.4-1.6"
+                            />
+                        </svg>
+
+                        <svg
+                            data-toggle-all-icon="show"
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="hidden w-4 h-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"
+                            />
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M12 15a3 3 0 100-6 3 3 0 000 6z"
+                            />
+                        </svg>
+                    </span>
+
+                    <span data-toggle-all-label>Hide all ingredients</span>
                 </button>
 
-            </form>
+
+                <form
+                    action="{{ url('/shopping-list/generate') }}"
+                    method="POST"
+                >
+
+                    @csrf
+
+                    <input
+                        type="hidden"
+                        name="week"
+                        value="{{ $startOfWeek->format('Y-m-d') }}"
+                    >
+
+
+                    <button
+                        type="submit"
+                        class="inline-flex items-center justify-center gap-2 bg-green-500 text-white px-5 py-3 rounded-xl font-semibold hover:bg-green-600 transition"
+                    >
+                        🔄 Refresh List
+                    </button>
+
+                </form>
+
+            </div>
 
         @endif
 
@@ -213,7 +272,7 @@
 <!-- Shopping List -->
 <!-- ========================================================= -->
 
-<div class="space-y-6">
+    <div class="space-y-6" id="shopping-list-sections">
 
 
     <!-- No Meals -->
@@ -308,12 +367,18 @@
 
             @php
                 $recipe = $items->first()->recipe;
+                $sectionId = 'shopping-section-' . $recipeId;
             @endphp
 
 
             @if ($recipe)
 
-                <section class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <section
+                    data-shopping-section
+                    data-expanded="true"
+                    data-recipe-name="{{ $recipe->name }}"
+                    class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
+                >
 
 
                     <!-- Recipe Header -->
@@ -322,40 +387,58 @@
 
                         <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
 
-                            <div>
+                            <h2 class="flex-1 min-w-0">
 
-                                <p class="text-xs font-semibold uppercase tracking-wider text-orange-500">
-                                    Recipe
-                                </p>
+                                <button
+                                    type="button"
+                                    data-section-toggle
+                                    aria-expanded="true"
+                                    aria-controls="{{ $sectionId }}"
+                                    title="Hide the ingredients for {{ $recipe->name }}"
+                                    class="group flex items-center gap-3 text-left w-full rounded-xl"
+                                >
 
-                                <h2 class="text-xl font-bold text-gray-800 mt-1">
-                                    🍳 {{ $recipe->name }}
-                                </h2>
-
-
-                                <div class="flex flex-wrap items-center gap-2 mt-3">
-
-                                    @if ($recipe->category)
-
-                                        <span class="bg-white/80 text-orange-700 px-3 py-1 rounded-full text-xs font-semibold">
-                                            🏷 {{ $recipe->category }}
-                                        </span>
-
-                                    @endif
-
-
-                                    <span class="bg-white/80 text-gray-600 px-3 py-1 rounded-full text-xs font-semibold">
-                                        👥 Serves {{ $recipe->servings }}
+                                    <span
+                                        data-section-chevron
+                                        aria-hidden="true"
+                                        class="shrink-0 w-8 h-8 inline-flex items-center justify-center rounded-lg bg-white border border-orange-200 text-orange-600 transition group-hover:border-orange-300"
+                                    >
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            class="w-4 h-4 transition-transform duration-200"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                            stroke-width="2.5"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                d="m6 9 6 6 6-6"
+                                            />
+                                        </svg>
                                     </span>
 
-                                </div>
+                                    <span class="min-w-0">
 
-                            </div>
+                                        <span
+                                            data-section-title
+                                            class="block text-xl font-bold text-gray-800 mt-1"
+                                        >
+                                            🍳 {{ $recipe->name }}
+                                        </span>
+
+                                    </span>
+
+
+                                </button>
+
+                            </h2>
 
 
                             <a
                                 href="{{ url('/recipes/' . $recipe->id) }}"
-                                class="inline-flex items-center justify-center gap-1 text-sm font-semibold text-orange-600 hover:text-orange-700"
+                                class="inline-flex items-center justify-center gap-1 text-sm font-semibold text-orange-600 hover:text-orange-700 shrink-0"
                             >
                                 View Recipe →
                             </a>
@@ -363,23 +446,53 @@
                         </div>
 
 
-                        <p class="text-xs text-gray-500 mt-4">
-                            📝 These ingredients are for one preparation of this recipe.
-                            If the same recipe is used for another meal, it is listed separately according to the planned recipe.
-                        </p>
+                        <div class="flex flex-wrap items-center gap-2 mt-4 pl-11">
+
+                            @if ($recipe->category)
+
+                                <span class="bg-white/80 text-orange-700 px-3 py-1 rounded-full text-xs font-semibold">
+                                    🏷 {{ $recipe->category }}
+                                </span>
+
+                            @endif
+
+
+                            <span class="bg-white/80 text-gray-600 px-3 py-1 rounded-full text-xs font-semibold">
+                                👥 Serves {{ $recipe->servings }}
+                            </span>
+
+
+                            <span
+                                data-section-count
+                                class="bg-white/80 text-gray-600 px-3 py-1 rounded-full text-xs font-semibold"
+                            >
+                                🧺 {{ $items->count() }}
+                                {{ Str::plural('ingredient', $items->count()) }}
+                            </span>
+
+                        </div>
 
                     </div>
 
 
                     <!-- Ingredients -->
 
-                    <div class="divide-y divide-gray-100">
+                    <div
+                        id="{{ $sectionId }}"
+                        data-section-body
+                        class="divide-y divide-gray-100"
+                    >
+
+                        <p class="px-6 pt-4 pb-1 text-xs text-gray-500">
+                            📝 These ingredients are for one preparation of this recipe.
+                            If the same recipe is used for another meal, it is listed separately according to the planned recipe.
+                        </p>
 
                         @foreach ($items as $item)
 
                             <div
                                 data-shopping-item="{{ $item->id }}"
-                                class="flex items-center gap-4 px-6 py-4 hover:bg-stone-50 transition"
+                                class="grid grid-cols-[auto_1fr_7rem_auto] items-center gap-4 px-6 py-4 hover:bg-stone-50 transition"
                             >
 
                                 <!-- Checkbox -->
@@ -387,7 +500,7 @@
                                 <form
                                     action="{{ url('/shopping-list/' . $item->id . '/toggle') }}"
                                     method="POST"
-                                    class="flex items-center shrink-0"
+                                    class="flex items-center"
                                 >
 
                                     @csrf
@@ -408,7 +521,7 @@
 
                                 <p
                                     data-ingredient
-                                    class="flex-1 min-w-0 font-medium transition
+                                    class="min-w-0 font-medium transition
                                     {{ $item->is_checked
                                         ? 'text-gray-400 line-through'
                                         : 'text-gray-800' }}"
@@ -419,15 +532,12 @@
 
                                 <!-- Quantity -->
 
-                                @if ($item->quantity)
-
-                                    <span
-                                        class="shrink-0 min-w-[90px] text-right text-sm font-semibold text-gray-500"
-                                    >
-                                        {{ $item->quantity }}
-                                    </span>
-
-                                @endif
+                                <span
+                                    data-quantity
+                                    class="text-right text-sm font-semibold text-gray-500 tabular-nums"
+                                >
+                                    {{ $item->quantity }}
+                                </span>
 
 
                                 <!-- Remove -->
@@ -435,7 +545,6 @@
                                 <form
                                     action="{{ url('/shopping-list/' . $item->id) }}"
                                     method="POST"
-                                    class="shrink-0"
                                 >
 
                                     @csrf
@@ -508,6 +617,136 @@
 </div>
 
 <script>
+    /*
+    |--------------------------------------------------------------------------
+    | Collapsible Recipe Sections
+    |--------------------------------------------------------------------------
+    |
+    | Each recipe header toggles its own ingredient list. The "Hide all
+    | ingredients" button collapses every section at once so only the recipe
+    | names are left, and flips to "Show all ingredients" once everything
+    | is hidden.
+    |
+    */
+
+    const shoppingSections = Array.from(
+        document.querySelectorAll('[data-shopping-section]')
+    );
+
+    const toggleAllButton = document.querySelector('[data-toggle-all]');
+    const toggleAllLabel = toggleAllButton?.querySelector('[data-toggle-all-label]');
+    const toggleAllIcon = toggleAllButton?.querySelector('[data-toggle-all-icon]');
+
+    const setSectionExpanded = (section, expanded) => {
+        const body = section.querySelector('[data-section-body]');
+        const toggle = section.querySelector('[data-section-toggle]');
+        const chevron = section.querySelector('[data-section-chevron]');
+        const action = section.querySelector('[data-section-action]');
+        const recipeName = section.dataset.recipeName || 'this recipe';
+
+        section.dataset.expanded = expanded ? 'true' : 'false';
+
+        if (body) {
+            body.classList.toggle('hidden', !expanded);
+        }
+
+        if (chevron) {
+            chevron.querySelector('svg')?.classList.toggle('rotate-180', !expanded);
+        }
+
+        if (action) {
+            action.textContent = expanded
+                ? 'Hide ingredients'
+                : 'Show ingredients';
+        }
+
+        if (toggle) {
+            toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+            toggle.setAttribute(
+                'title',
+                `${expanded ? 'Hide' : 'Show'} the ingredients for ${recipeName}`
+            );
+            toggle.setAttribute(
+                'aria-label',
+                `${expanded ? 'Hide' : 'Show'} ingredients for ${recipeName}`
+            );
+        }
+    };
+
+    const syncToggleAllLabel = () => {
+        if (!toggleAllButton || !toggleAllLabel) {
+            return;
+        }
+
+        const allExpanded = shoppingSections.every(
+            (section) => section.dataset.expanded !== 'false'
+        );
+
+        toggleAllLabel.textContent = allExpanded
+            ? 'Hide all ingredients'
+            : 'Show all ingredients';
+
+        toggleAllIcon
+            ?.querySelector('[data-toggle-all-icon="hide"]')
+            ?.classList.toggle('hidden', !allExpanded);
+
+        toggleAllIcon
+            ?.querySelector('[data-toggle-all-icon="show"]')
+            ?.classList.toggle('hidden', allExpanded);
+
+        toggleAllButton.setAttribute(
+            'title',
+            allExpanded
+                ? 'Hide the ingredient list for every recipe'
+                : 'Show the ingredient list for every recipe'
+        );
+
+        toggleAllButton.setAttribute('aria-label', allExpanded
+            ? 'Hide all ingredients and show recipe names only'
+            : 'Show all ingredients');
+    };
+
+    shoppingSections.forEach((section) => {
+        const toggle = section.querySelector('[data-section-toggle]');
+
+        if (!toggle) {
+            return;
+        }
+
+        setSectionExpanded(section, true);
+
+        toggle.addEventListener('click', () => {
+            setSectionExpanded(
+                section,
+                section.dataset.expanded === 'false'
+            );
+
+            syncToggleAllLabel();
+        });
+    });
+
+    if (toggleAllButton) {
+        toggleAllButton.addEventListener('click', () => {
+            const allExpanded = shoppingSections.every(
+                (section) => section.dataset.expanded !== 'false'
+            );
+
+            shoppingSections.forEach((section) => {
+                setSectionExpanded(section, !allExpanded);
+            });
+
+            syncToggleAllLabel();
+        });
+
+        syncToggleAllLabel();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Toggle Ingredient
+    |--------------------------------------------------------------------------
+    */
+
     async function toggleShoppingItem(checkbox) {
         const form = checkbox.closest('form');
         const row = checkbox.closest('[data-shopping-item]');
