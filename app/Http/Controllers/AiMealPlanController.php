@@ -79,11 +79,16 @@ class AiMealPlanController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Get user's recipes
+        | Get the user's own recipes and public recipes
         |--------------------------------------------------------------------------
         */
 
-        $recipes = Recipe::where('user_id', $user->id)
+        $recipes = Recipe::where(function ($query) use ($user) {
+
+            $query->where('user_id', $user->id)
+                ->orWhere('is_public', true);
+
+        })
             ->latest()
             ->get();
 
@@ -484,7 +489,12 @@ class AiMealPlanController extends Controller
             }
 
             $recipe = Recipe::where('id', $meal['recipe_id'])
-                ->where('user_id', $user->id)
+                ->where(function ($query) use ($user) {
+
+                    $query->where('user_id', $user->id)
+                        ->orWhere('is_public', true);
+
+                })
                 ->first();
 
             if (! $recipe) {

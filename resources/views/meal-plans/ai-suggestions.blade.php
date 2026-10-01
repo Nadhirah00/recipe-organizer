@@ -529,7 +529,7 @@
         <input
             type="text"
             id="recipeSearch"
-            placeholder="🔎 Search your recipes..."
+            placeholder="🔎 Search your recipes and public recipes..."
             onkeyup="filterRecipes()"
             class="w-full border border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-400"
         >
@@ -576,6 +576,10 @@
                             </span>
 
                         @endif
+
+                        <span class="block text-xs text-gray-400 mt-1">
+                            {{ $recipe->user_id === auth()->id() ? '👨‍🍳 By You' : '🌎 Public Recipe' }}
+                        </span>
 
                     </div>
 

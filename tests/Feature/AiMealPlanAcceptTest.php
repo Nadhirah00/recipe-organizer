@@ -264,6 +264,54 @@ it('never overwrites a slot with a private recipe the user does not own', functi
     ]);
 });
 
+it('plans a public recipe owned by another user', function () {
+    $user = User::factory()->create();
+    $other = User::factory()->create();
+
+    $publicRecipe = aiRecipe($other, [
+        'name' => 'Hokkien Mee',
+        'is_public' => true,
+        'ingredients' => 'Noodles',
+    ]);
+
+    $existing = aiRecipe($user, [
+        'name' => 'Old Breakfast',
+        'ingredients' => 'Toast',
+    ]);
+
+    aiSlot($user, $existing, '2026-09-28', 'Breakfast');
+
+    ShoppingList::create([
+        'user_id' => $user->id,
+        'week_start' => '2026-09-28',
+        'recipe_id' => $existing->id,
+        'ingredient' => 'Toast',
+        'quantity' => null,
+        'is_checked' => false,
+    ]);
+
+    acceptPlan($user, [
+        aiEntry('Monday', 'Breakfast', $publicRecipe->id),
+    ])->assertSessionHasNoErrors();
+
+    expect(aiPlannedMeals())->toBe([
+        [
+            'user_id' => $user->id,
+            'recipe' => 'Hokkien Mee',
+            'date' => '2026-09-28',
+            'meal_type' => 'Breakfast',
+        ],
+    ]);
+
+    expect(
+        ShoppingList::where('user_id', $user->id)
+            ->pluck('ingredient')
+            ->sort()
+            ->values()
+            ->all()
+    )->toBe(['Noodles']);
+});
+
 it('rebuilds the shopping list from the updated plan', function () {
     $user = User::factory()->create();
 
