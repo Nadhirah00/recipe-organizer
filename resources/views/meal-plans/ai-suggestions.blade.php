@@ -343,6 +343,20 @@
 
     <!-- Warning -->
 
+    @php
+
+        $plannedMealTypes = $requestedMealTypes;
+
+        $keptMealTypes = array_values(
+            array_diff(
+                ['Breakfast', 'Lunch', 'Dinner'],
+                $plannedMealTypes
+            )
+        );
+
+    @endphp
+
+
     <div class="bg-yellow-50 border border-yellow-200 rounded-2xl p-5 mt-6">
 
         <div class="flex items-start gap-3">
@@ -358,11 +372,24 @@
                 </p>
 
                 <p class="text-sm text-yellow-700 mt-1 leading-6">
-                    This AI plan will replace your existing plan for
+                    This replaces your
+                    <strong>{{ implode(' and ', $plannedMealTypes) }}</strong>
+                    meals for
                     {{ $startOfWeek->format('d M') }}
                     -
-                    {{ $endOfWeek->format('d M Y') }}.
-                    Empty meal slots will remain empty unless you add meals manually.
+                    {{ $endOfWeek->format('d M Y') }}
+                    with the suggestions above.
+
+                    @if ($keptMealTypes !== [])
+
+                        Your
+                        <strong>{{ implode(' and ', $keptMealTypes) }}</strong>
+                        meals are not part of this plan and will be left
+                        exactly as they are.
+
+                    @endif
+
+                    Any meal the AI could not fill keeps what you already had planned.
                 </p>
 
             </div>
@@ -387,6 +414,14 @@
             type="hidden"
             name="weekly_plan"
             id="weeklyPlanInput"
+        >
+
+        {{-- Only these meal types were requested, so accepting must not touch any others. --}}
+
+        <input
+            type="hidden"
+            name="meal_types"
+            value="{{ implode(',', $requestedMealTypes) }}"
         >
 
         <input
@@ -936,6 +971,19 @@
         const missingSlots =
             {{ $missingSlots }};
 
+        const plannedMealTypes =
+            @json($plannedMealTypes);
+
+        const keptMealTypes =
+            @json($keptMealTypes);
+
+        const keptNote =
+            keptMealTypes.length
+                ? ' Your ' +
+                    keptMealTypes.join(' and ') +
+                    ' meals will not be touched.'
+                : '';
+
 
         if (missingSlots > 0) {
 
@@ -948,14 +996,19 @@
                         ? 'slot'
                         : 'slots'
                 ) +
-                '. Do you still want to accept it?'
+                '. Anything it could not fill keeps the meal you already have.' +
+                keptNote +
+                ' Accept anyway?'
             );
 
         }
 
 
         return confirm(
-            'Accept this AI meal plan? Your existing plan for this week will be replaced.'
+            'Replace your ' +
+            plannedMealTypes.join(' and ') +
+            ' meals with these suggestions?' +
+            keptNote
         );
     }
 

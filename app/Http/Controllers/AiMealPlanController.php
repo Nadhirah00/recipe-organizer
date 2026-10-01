@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\MealPlan;
 use App\Models\Recipe;
 use App\Models\UserPreference;
-use App\Models\MealPlan;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Http\Request;
+use App\Support\SyncShoppingList;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 class AiMealPlanController extends Controller
 {
@@ -28,7 +31,6 @@ class AiMealPlanController extends Controller
 
         $endOfWeek = $startOfWeek->copy()->addDays(6);
 
-
         /*
         |--------------------------------------------------------------------------
         | Get saved preferences
@@ -39,7 +41,6 @@ class AiMealPlanController extends Controller
             'user_id',
             $user->id
         )->first();
-
 
         /*
         |--------------------------------------------------------------------------
@@ -76,7 +77,6 @@ class AiMealPlanController extends Controller
             ];
         }
 
-
         /*
         |--------------------------------------------------------------------------
         | Get user's recipes
@@ -95,7 +95,6 @@ class AiMealPlanController extends Controller
                     'Please add some recipes before using AI meal planning.'
                 );
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -118,37 +117,15 @@ class AiMealPlanController extends Controller
             ->values()
             ->toArray();
 
-
         /*
         |--------------------------------------------------------------------------
         | Normalize meal types
         |--------------------------------------------------------------------------
         */
 
-        $requestedMealTypes = $preferenceData['meal_types']
-            ?? ['Breakfast', 'Lunch', 'Dinner'];
-
-        if (is_string($requestedMealTypes)) {
-
-            $requestedMealTypes = array_map(
-                'trim',
-                explode(',', $requestedMealTypes)
-            );
-        }
-
-        $requestedMealTypes = array_values(
-            array_filter($requestedMealTypes)
+        $requestedMealTypes = $this->normalizeMealTypes(
+            $preferenceData['meal_types'] ?? null
         );
-
-        if (empty($requestedMealTypes)) {
-
-            $requestedMealTypes = [
-                'Breakfast',
-                'Lunch',
-                'Dinner',
-            ];
-        }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -158,7 +135,6 @@ class AiMealPlanController extends Controller
 
         $weekStart = $startOfWeek->format('Y-m-d');
         $weekEnd = $endOfWeek->format('Y-m-d');
-
 
         /*
         |--------------------------------------------------------------------------
@@ -177,16 +153,16 @@ class AiMealPlanController extends Controller
     Use ONLY the recipes provided in the available recipes list.
 
     USER PREFERENCES FOR THIS WEEK:
-    " . json_encode(
-        $preferenceData,
-        JSON_PRETTY_PRINT
-    ) . "
+    ".json_encode(
+            $preferenceData,
+            JSON_PRETTY_PRINT
+        ).'
 
     AVAILABLE RECIPES:
-    " . json_encode(
-        $recipeData,
-        JSON_PRETTY_PRINT
-    ) . "
+    '.json_encode(
+            $recipeData,
+            JSON_PRETTY_PRINT
+        ).'
 
     IMPORTANT RULES:
 
@@ -195,7 +171,7 @@ class AiMealPlanController extends Controller
     3. Never invent a recipe_id.
     4. Every recipe_id must exactly match an available recipe.
     5. Plan ONLY the requested meal types:
-    " . implode(', ', $requestedMealTypes) . "
+    '.implode(', ', $requestedMealTypes)."
     6. Create all seven days:
     Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday.
     7. Every requested meal type should have a suitable recipe whenever possible.
@@ -238,7 +214,6 @@ class AiMealPlanController extends Controller
     }
     ";
 
-
         /*
         |--------------------------------------------------------------------------
         | Send request to Gemini
@@ -247,7 +222,7 @@ class AiMealPlanController extends Controller
 
         $response = Http::timeout(60)->post(
             'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key='
-            . config('services.gemini.api_key'),
+            .config('services.gemini.api_key'),
             [
                 'contents' => [
                     [
@@ -261,7 +236,6 @@ class AiMealPlanController extends Controller
             ]
         );
 
-
         /*
         |--------------------------------------------------------------------------
         | Check Gemini response
@@ -271,7 +245,7 @@ class AiMealPlanController extends Controller
         if ($response->failed()) {
 
             return redirect(
-                '/meal-planner?week=' .
+                '/meal-planner?week='.
                 $startOfWeek->format('Y-m-d')
             )->with(
                 'error',
@@ -279,25 +253,21 @@ class AiMealPlanController extends Controller
             );
         }
 
-
         $result = $response->json();
-
 
         $text = $result['candidates'][0]['content']['parts'][0]['text']
             ?? null;
 
-
-        if (!$text) {
+        if (! $text) {
 
             return redirect(
-                '/meal-planner?week=' .
+                '/meal-planner?week='.
                 $startOfWeek->format('Y-m-d')
             )->with(
                 'error',
                 'AI did not return any suggestions.'
             );
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -321,7 +291,6 @@ class AiMealPlanController extends Controller
 
         $text = trim($text);
 
-
         /*
         |--------------------------------------------------------------------------
         | Convert JSON into PHP array
@@ -333,18 +302,16 @@ class AiMealPlanController extends Controller
             true
         );
 
-
-        if (!is_array($suggestions)) {
+        if (! is_array($suggestions)) {
 
             return redirect(
-                '/meal-planner?week=' .
+                '/meal-planner?week='.
                 $startOfWeek->format('Y-m-d')
             )->with(
                 'error',
                 'AI returned an invalid meal plan. Please try again.'
             );
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -357,7 +324,6 @@ class AiMealPlanController extends Controller
             $recipes,
             $preferenceData
         );
-
 
         /*
         |--------------------------------------------------------------------------
@@ -375,14 +341,11 @@ class AiMealPlanController extends Controller
             'Sunday',
         ];
 
-
         $totalSlots =
             count($days) *
             count($requestedMealTypes);
 
-
         $filledSlots = 0;
-
 
         foreach ($days as $day) {
 
@@ -390,17 +353,15 @@ class AiMealPlanController extends Controller
 
                 if (
                     isset($suggestions[$day][$mealType]) &&
-                    !empty($suggestions[$day][$mealType]['recipe_id'])
+                    ! empty($suggestions[$day][$mealType]['recipe_id'])
                 ) {
                     $filledSlots++;
                 }
             }
         }
 
-
         $missingSlots =
             $totalSlots - $filledSlots;
-
 
         $coveragePercentage =
             $totalSlots > 0
@@ -408,7 +369,6 @@ class AiMealPlanController extends Controller
                     ($filledSlots / $totalSlots) * 100
                 )
                 : 0;
-
 
         /*
         |--------------------------------------------------------------------------
@@ -423,6 +383,7 @@ class AiMealPlanController extends Controller
                 'recipes',
                 'startOfWeek',
                 'endOfWeek',
+                'requestedMealTypes',
                 'filledSlots',
                 'totalSlots',
                 'missingSlots',
@@ -438,23 +399,35 @@ class AiMealPlanController extends Controller
         $request->validate([
             'weekly_plan' => 'required|json',
             'week' => 'required|date',
+            'meal_types' => 'nullable',
         ]);
 
         $weeklyPlan = json_decode($request->weekly_plan, true);
 
-        if (!is_array($weeklyPlan) || empty($weeklyPlan)) {
+        if (! is_array($weeklyPlan) || empty($weeklyPlan)) {
             return back()->with(
                 'error',
                 'The AI meal plan could not be accepted because no meals were submitted.'
             );
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | The meal types the user actually asked the AI to plan
+        |--------------------------------------------------------------------------
+        |
+        | This is the scope of the change. Anything outside it was never
+        | offered for review, so it must not be written even if it turns
+        | up in the submitted payload.
+        |
+        */
+
+        $scopedMealTypes = $this->normalizeMealTypes(
+            $request->input('meal_types')
+        );
+
         $startOfWeek = Carbon::parse($request->week)
             ->startOfWeek();
-
-        $endOfWeek = $startOfWeek
-            ->copy()
-            ->addDays(6);
 
         $dayOffsets = [
             'Monday' => 0,
@@ -470,7 +443,7 @@ class AiMealPlanController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Validate everything BEFORE deleting the existing week
+        | Validate everything before writing anything
         |--------------------------------------------------------------------------
         */
 
@@ -484,13 +457,28 @@ class AiMealPlanController extends Controller
                 continue;
             }
 
-            if (!isset($dayOffsets[$meal['day']])) {
+            if (! isset($dayOffsets[$meal['day']])) {
                 continue;
             }
 
-            if (!in_array(
+            if (! in_array(
                 $meal['meal_type'],
-                ['Breakfast', 'Lunch', 'Dinner']
+                self::MEAL_TYPES,
+                true
+            )) {
+                continue;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Ignore a meal type the user did not request
+            |--------------------------------------------------------------------------
+            */
+
+            if (! in_array(
+                $meal['meal_type'],
+                $scopedMealTypes,
+                true
             )) {
                 continue;
             }
@@ -499,7 +487,7 @@ class AiMealPlanController extends Controller
                 ->where('user_id', $user->id)
                 ->first();
 
-            if (!$recipe) {
+            if (! $recipe) {
                 continue;
             }
 
@@ -507,7 +495,7 @@ class AiMealPlanController extends Controller
                 ->copy()
                 ->addDays($dayOffsets[$meal['day']]);
 
-            $mealsToSave[] = [
+            $mealsToSave[$date->toDateString().'|'.$meal['meal_type']] = [
                 'user_id' => $user->id,
                 'recipe_id' => $recipe->id,
                 'date' => $date->toDateString(),
@@ -517,7 +505,15 @@ class AiMealPlanController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Don't delete the existing week if there is nothing valid to save
+        | Keyed by slot, so a repeated slot collapses to one entry
+        |--------------------------------------------------------------------------
+        */
+
+        $mealsToSave = array_values($mealsToSave);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Don't write anything if there is nothing valid to save
         |--------------------------------------------------------------------------
         */
 
@@ -528,28 +524,106 @@ class AiMealPlanController extends Controller
             );
         }
 
+        $writtenMealTypes = array_values(
+            array_unique(
+                array_column($mealsToSave, 'meal_type')
+            )
+        );
+
+        $plannedCount = count($mealsToSave);
+
+        DB::transaction(function () use ($mealsToSave) {
+
+            /*
+            |--------------------------------------------------------------------------
+            | Upsert each slot rather than clearing the week
+            |--------------------------------------------------------------------------
+            |
+            | Only the slots the AI actually filled are touched. A requested
+            | meal type the AI could not fill keeps whatever was already
+            | planned there, and meal types outside the request are never
+            | read, written or deleted.
+            |
+            */
+
+            foreach ($mealsToSave as $meal) {
+
+                /*
+                |--------------------------------------------------------------------------
+                | Matched with whereDate because the stored value
+                | is a datetime on some drivers
+                |--------------------------------------------------------------------------
+                */
+
+                $existing = MealPlan::where(
+                    'user_id',
+                    $meal['user_id']
+                )
+                    ->whereDate(
+                        'date',
+                        $meal['date']
+                    )
+                    ->where(
+                        'meal_type',
+                        $meal['meal_type']
+                    )
+                    ->first();
+
+                if ($existing) {
+
+                    $existing->update([
+                        'recipe_id' => $meal['recipe_id'],
+                    ]);
+
+                    continue;
+                }
+
+                MealPlan::create($meal);
+            }
+        });
+
+        app(SyncShoppingList::class)(
+            $user->id,
+            $startOfWeek
+        );
+
         /*
         |--------------------------------------------------------------------------
-        | Replace only the selected week
+        | Report what changed and what was deliberately left alone
         |--------------------------------------------------------------------------
         */
 
-        \App\Models\MealPlan::where('user_id', $user->id)
-            ->whereBetween('date', [
-                $startOfWeek->toDateString(),
-                $endOfWeek->toDateString(),
-            ])
-            ->delete();
+        $untouchedMealTypes = array_values(
+            array_diff(
+                self::MEAL_TYPES,
+                $writtenMealTypes
+            )
+        );
 
-        foreach ($mealsToSave as $meal) {
-            \App\Models\MealPlan::create($meal);
+        $message = sprintf(
+            '%d %s updated for %s.',
+            $plannedCount,
+            Str::plural('meal', $plannedCount),
+            $startOfWeek->format('j M').' - '.$startOfWeek->copy()->addDays(6)->format('j M Y')
+        );
+
+        if ($untouchedMealTypes !== []) {
+
+            $keptCount = count($untouchedMealTypes);
+
+            $message .= sprintf(
+                ' Your %s %s left as %s.',
+                Str::lower(implode(', ', $untouchedMealTypes)),
+                $keptCount === 1 ? 'was' : 'were',
+                $keptCount === 1 ? 'it is' : 'they are'
+            );
         }
 
         return redirect(
-            '/meal-planner?week=' . $startOfWeek->format('Y-m-d')
+            '/meal-planner?week='.$startOfWeek->format('Y-m-d')
         )->with(
             'success',
-            'Your AI weekly meal plan has been accepted and the previous plan for this week has been replaced.'
+            $message
         );
     }
 
@@ -566,31 +640,9 @@ class AiMealPlanController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $rawMealTypes = $preferences['meal_types'] ?? null;
-
-        if (is_array($rawMealTypes)) {
-            $mealTypes = array_map('trim', $rawMealTypes);
-        } elseif (is_string($rawMealTypes) && trim($rawMealTypes) !== '') {
-            $mealTypes = array_map('trim', explode(',', $rawMealTypes));
-        } else {
-            $mealTypes = ['Breakfast', 'Lunch', 'Dinner'];
-        }
-
-        $mealTypes = array_values(
-            array_filter($mealTypes)
+        $mealTypes = $this->normalizeMealTypes(
+            $preferences['meal_types'] ?? null
         );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | If nothing is selected, use all meal types
-        |--------------------------------------------------------------------------
-        */
-
-        if (empty($mealTypes)) {
-            $mealTypes = ['Breakfast', 'Lunch', 'Dinner'];
-        }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -608,7 +660,6 @@ class AiMealPlanController extends Controller
             'Sunday',
         ];
 
-
         /*
         |--------------------------------------------------------------------------
         | Track recipe usage
@@ -618,7 +669,6 @@ class AiMealPlanController extends Controller
         $usedCounts = [];
 
         $result = [];
-
 
         /*
         |--------------------------------------------------------------------------
@@ -632,11 +682,9 @@ class AiMealPlanController extends Controller
 
             $usedToday = [];
 
-
             foreach ($mealTypes as $mealType) {
 
                 $recipeId = null;
-
 
                 /*
                 |--------------------------------------------------------------------------
@@ -648,20 +696,19 @@ class AiMealPlanController extends Controller
 
                 if (
                     is_array($aiMeal) &&
-                    !empty($aiMeal['recipe_id'])
+                    ! empty($aiMeal['recipe_id'])
                 ) {
 
                     $candidateId = (int) $aiMeal['recipe_id'];
 
                     if (
                         $recipeMap->has($candidateId) &&
-                        !in_array($candidateId, $usedToday) &&
+                        ! in_array($candidateId, $usedToday) &&
                         ($usedCounts[$candidateId] ?? 0) < 2
                     ) {
                         $recipeId = $candidateId;
                     }
                 }
-
 
                 /*
                 |--------------------------------------------------------------------------
@@ -669,7 +716,7 @@ class AiMealPlanController extends Controller
                 |--------------------------------------------------------------------------
                 */
 
-                if (!$recipeId) {
+                if (! $recipeId) {
 
                     $candidate = $recipes
                         ->filter(function ($recipe) use (
@@ -700,14 +747,13 @@ class AiMealPlanController extends Controller
                     }
                 }
 
-
                 /*
                 |--------------------------------------------------------------------------
                 | 3. If no exact category match, use another suitable recipe
                 |--------------------------------------------------------------------------
                 */
 
-                if (!$recipeId) {
+                if (! $recipeId) {
 
                     $candidate = $recipes
                         ->filter(function ($recipe) use (
@@ -743,18 +789,17 @@ class AiMealPlanController extends Controller
                     }
                 }
 
-
                 /*
                 |--------------------------------------------------------------------------
                 | 4. Last fallback
                 |--------------------------------------------------------------------------
                 */
 
-                if (!$recipeId) {
+                if (! $recipeId) {
 
                     $candidate = $recipes
                         ->filter(function ($recipe) use ($usedToday) {
-                            return !in_array(
+                            return ! in_array(
                                 $recipe->id,
                                 $usedToday
                             );
@@ -768,7 +813,6 @@ class AiMealPlanController extends Controller
                         $recipeId = $candidate->id;
                     }
                 }
-
 
                 /*
                 |--------------------------------------------------------------------------
@@ -794,6 +838,72 @@ class AiMealPlanController extends Controller
         }
 
         return $result;
+    }
+
+    /**
+     * The meal types this planner understands, in display order.
+     *
+     * @var array<int, string>
+     */
+    private const MEAL_TYPES = [
+        'Breakfast',
+        'Lunch',
+        'Dinner',
+    ];
+
+    /**
+     * Reduce a submitted or stored meal type selection to a clean,
+     * whitelisted list. Anything unrecognised is dropped, and an
+     * empty selection falls back to planning every meal type.
+     */
+    private function normalizeMealTypes(mixed $raw): array
+    {
+        if (is_string($raw)) {
+            $raw = explode(',', $raw);
+        }
+
+        if (! is_array($raw)) {
+            $raw = [];
+        }
+
+        $requested = array_map(
+            fn ($mealType) => trim((string) $mealType),
+            $raw
+        );
+
+        $requested = array_values(
+            array_filter(
+                $requested,
+                fn ($mealType) => in_array(
+                    $mealType,
+                    self::MEAL_TYPES,
+                    true
+                )
+            )
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Keep the canonical order and drop duplicates
+        |--------------------------------------------------------------------------
+        */
+
+        $known = array_values(
+            array_intersect(
+                self::MEAL_TYPES,
+                $requested
+            )
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | No usable selection means plan every meal type
+        |--------------------------------------------------------------------------
+        */
+
+        return $known === []
+            ? self::MEAL_TYPES
+            : $known;
     }
 
     public function setup(Request $request)

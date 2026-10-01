@@ -6,7 +6,7 @@ use App\Models\Favorite;
 use App\Models\MealPlan;
 use App\Models\Recipe;
 use App\Models\ShoppingList;
-use App\Support\IngredientParser;
+use App\Support\SyncShoppingList;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -431,188 +431,14 @@ class MealPlanController extends Controller
         ]);
     }
 
+    /**
+     * Rebuild the shopping list for the affected week.
+     */
     private function syncShoppingList(Carbon $startOfWeek): void
     {
-        $userId = Auth::id();
-
-        $endOfWeek = $startOfWeek->copy()->addDays(6);
-
-        /*
-        |--------------------------------------------------------------------------
-        | Get current meals for this week
-        |--------------------------------------------------------------------------
-        */
-
-        $mealPlans = MealPlan::with('recipe')
-            ->where('user_id', $userId)
-            ->whereBetween('date', [
-                $startOfWeek->toDateString(),
-                $endOfWeek->toDateString(),
-            ])
-            ->get();
-
-        /*
-        |--------------------------------------------------------------------------
-        | Get existing shopping list
-        |--------------------------------------------------------------------------
-        */
-
-        $existingItems = ShoppingList::where(
-            'user_id',
-            $userId
-        )
-            ->whereDate(
-                'week_start',
-                $startOfWeek->toDateString()
-            )
-            ->get();
-
-        /*
-        |--------------------------------------------------------------------------
-        | Build checked-item lookup
-        |--------------------------------------------------------------------------
-        |
-        | The key is recipe + ingredient.
-        | Therefore, if the same recipe appears on another day,
-        | its checked state can be preserved.
-        |
-        */
-
-        $checkedItems = [];
-
-        foreach ($existingItems as $item) {
-
-            if ($item->is_checked) {
-
-                $parsed = IngredientParser::parse(
-                    $item->ingredient
-                );
-
-                $key =
-                    $item->recipe_id.
-                    '|'.
-                    strtolower(trim($parsed['ingredient']));
-
-                $checkedItems[$key] = true;
-            }
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | Do nothing if a shopping list has never been generated
-        |--------------------------------------------------------------------------
-        */
-
-        if ($existingItems->isEmpty()) {
-            return;
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | Rebuild the selected week's shopping list
-        |--------------------------------------------------------------------------
-        */
-
-        ShoppingList::where(
-            'user_id',
-            $userId
-        )
-            ->whereDate(
-                'week_start',
-                $startOfWeek->toDateString()
-            )
-            ->delete();
-
-        /*
-        |--------------------------------------------------------------------------
-        | Track ingredients already added
-        |--------------------------------------------------------------------------
-        */
-
-        $savedIngredients = [];
-
-        foreach ($mealPlans as $mealPlan) {
-
-            if (! $mealPlan->recipe) {
-                continue;
-            }
-
-            $recipeId = $mealPlan->recipe->id;
-
-            $ingredients = preg_split(
-                '/\r\n|\r|\n/',
-                $mealPlan->recipe->ingredients
-            );
-
-            foreach ($ingredients as $ingredient) {
-
-                $ingredient = trim($ingredient);
-
-                if ($ingredient === '') {
-                    continue;
-                }
-
-                /*
-                |--------------------------------------------------------------------------
-                | Split the quantity out so it can be shown
-                | in its own right-aligned column
-                |--------------------------------------------------------------------------
-                */
-
-                $parsed = IngredientParser::parse(
-                    $ingredient
-                );
-
-                $ingredientName =
-                    trim($parsed['ingredient']);
-
-                $quantity =
-                    $parsed['quantity'];
-
-                if ($ingredientName === '') {
-                    continue;
-                }
-
-                /*
-                |--------------------------------------------------------------------------
-                | Same recipe + same ingredient = one shopping item
-                |--------------------------------------------------------------------------
-                |
-                | Keyed on the parsed name so the same ingredient
-                | collapses regardless of the raw wording or
-                | quantity, matching createShoppingList().
-                |
-                */
-
-                $key =
-                    $recipeId.
-                    '|'.
-                    strtolower($ingredientName);
-
-                if (isset($savedIngredients[$key])) {
-                    continue;
-                }
-
-                $savedIngredients[$key] = true;
-
-                /*
-                |--------------------------------------------------------------------------
-                | Preserve checked state
-                |--------------------------------------------------------------------------
-                */
-
-                $wasChecked =
-                    $checkedItems[$key] ?? false;
-
-                ShoppingList::create([
-                    'user_id' => $userId,
-                    'week_start' => $startOfWeek->toDateString(),
-                    'recipe_id' => $recipeId,
-                    'ingredient' => ucwords($ingredientName),
-                    'quantity' => $quantity,
-                    'is_checked' => $wasChecked,
-                ]);
-            }
-        }
+        app(SyncShoppingList::class)(
+            Auth::id(),
+            $startOfWeek
+        );
     }
 }
