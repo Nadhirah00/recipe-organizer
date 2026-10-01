@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\MealPlan;
 use App\Models\ShoppingList;
+use App\Support\IngredientParser;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -243,7 +244,7 @@ class ShoppingListController extends Controller
                     continue;
                 }
 
-                $parsed = $this->parseIngredient(
+                $parsed = IngredientParser::parse(
                     $ingredient
                 );
 
@@ -278,90 +279,6 @@ class ShoppingListController extends Controller
                 ]);
             }
         }
-    }
-
-    private function parseIngredient(string $ingredient): array
-    {
-        $ingredient = trim($ingredient);
-
-        /*
-        |--------------------------------------------------------------------------
-        | Quantity + unit
-        |--------------------------------------------------------------------------
-        |
-        | Supports:
-        |
-        | 3 cups cooked rice
-        | 1 chicken breast
-        | 2 cloves garlic
-        | 1/2 teaspoon salt
-        | 1/4 onion
-        | 2 tablespoons soy sauce
-        | 1 pinch salt
-        | pinch salt
-        |
-        */
-
-        $pattern = '~^
-            (
-                \d+/\d+
-                |
-                \d+(?:\.\d+)?
-                |
-                pinch
-            )
-            \s*
-            (
-                tablespoons?|tbsp|
-                teaspoons?|tsp|
-                cups?|
-                grams?|g|
-                kilograms?|kg|
-                milliliters?|ml|
-                liters?|l|
-                cloves?|
-                pieces?|pcs|
-                slices?|
-                pinch(?:es)?
-            )?
-            \s*
-            (?:of\s+)?
-        ~ix';
-
-        if (preg_match(
-            $pattern,
-            $ingredient,
-            $matches
-        )) {
-
-            $quantity = trim(
-                $matches[1].
-                (
-                    ! empty($matches[2])
-                        ? ' '.trim($matches[2])
-                        : ''
-                )
-            );
-
-            $name = trim(
-                preg_replace(
-                    $pattern,
-                    '',
-                    $ingredient,
-                    1
-                )
-            );
-
-            return [
-                'ingredient' => $name,
-                'quantity' => $quantity,
-            ];
-        }
-
-        return [
-            'ingredient' => $ingredient,
-            'quantity' => null,
-        ];
     }
 
     /*

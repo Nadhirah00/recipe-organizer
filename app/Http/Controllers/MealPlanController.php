@@ -6,6 +6,7 @@ use App\Models\Favorite;
 use App\Models\MealPlan;
 use App\Models\Recipe;
 use App\Models\ShoppingList;
+use App\Support\IngredientParser;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -483,10 +484,14 @@ class MealPlanController extends Controller
 
             if ($item->is_checked) {
 
+                $parsed = IngredientParser::parse(
+                    $item->ingredient
+                );
+
                 $key =
                     $item->recipe_id.
                     '|'.
-                    strtolower(trim($item->ingredient));
+                    strtolower(trim($parsed['ingredient']));
 
                 $checkedItems[$key] = true;
             }
@@ -549,14 +554,40 @@ class MealPlanController extends Controller
 
                 /*
                 |--------------------------------------------------------------------------
+                | Split the quantity out so it can be shown
+                | in its own right-aligned column
+                |--------------------------------------------------------------------------
+                */
+
+                $parsed = IngredientParser::parse(
+                    $ingredient
+                );
+
+                $ingredientName =
+                    trim($parsed['ingredient']);
+
+                $quantity =
+                    $parsed['quantity'];
+
+                if ($ingredientName === '') {
+                    continue;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
                 | Same recipe + same ingredient = one shopping item
                 |--------------------------------------------------------------------------
+                |
+                | Keyed on the parsed name so the same ingredient
+                | collapses regardless of the raw wording or
+                | quantity, matching createShoppingList().
+                |
                 */
 
                 $key =
                     $recipeId.
                     '|'.
-                    strtolower($ingredient);
+                    strtolower($ingredientName);
 
                 if (isset($savedIngredients[$key])) {
                     continue;
@@ -577,8 +608,8 @@ class MealPlanController extends Controller
                     'user_id' => $userId,
                     'week_start' => $startOfWeek->toDateString(),
                     'recipe_id' => $recipeId,
-                    'ingredient' => ucwords($ingredient),
-                    'quantity' => null,
+                    'ingredient' => ucwords($ingredientName),
+                    'quantity' => $quantity,
                     'is_checked' => $wasChecked,
                 ]);
             }

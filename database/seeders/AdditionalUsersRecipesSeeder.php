@@ -8,6 +8,7 @@ use App\Models\Recipe;
 use App\Models\ShoppingList;
 use App\Models\User;
 use App\Models\UserPreference;
+use App\Support\IngredientParser;
 use Carbon\Carbon;
 use Database\Seeders\Concerns\DownloadsRecipeImages;
 use Illuminate\Database\Seeder;
@@ -468,7 +469,15 @@ class AdditionalUsersRecipesSeeder extends Seeder
                     continue;
                 }
 
-                $key = $recipeId.'|'.strtolower($ingredient);
+                $parsed = IngredientParser::parse($ingredient);
+
+                $ingredientName = trim($parsed['ingredient']);
+
+                if ($ingredientName === '') {
+                    continue;
+                }
+
+                $key = $recipeId.'|'.strtolower($ingredientName);
 
                 if (isset($savedIngredients[$key])) {
                     continue;
@@ -480,8 +489,8 @@ class AdditionalUsersRecipesSeeder extends Seeder
                     'user_id' => $user->id,
                     'week_start' => $startOfWeek->toDateString(),
                     'recipe_id' => $recipeId,
-                    'ingredient' => ucwords($ingredient),
-                    'quantity' => null,
+                    'ingredient' => ucwords($ingredientName),
+                    'quantity' => $parsed['quantity'],
                     'is_checked' => false,
                 ]);
             }
