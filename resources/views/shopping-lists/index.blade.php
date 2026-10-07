@@ -375,6 +375,7 @@
 
                 <section
                     data-shopping-section
+                    data-recipe-id="{{ $recipeId }}"
                     data-expanded="true"
                     data-recipe-name="{{ $recipe->name }}"
                     class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
@@ -629,9 +630,29 @@
     |
     */
 
+    const shoppingListStorageKey = 'shoppingList:sections:{{ auth()->id() }}';
+
+    const readCollapsedState = () => {
+        try {
+            return JSON.parse(localStorage.getItem(shoppingListStorageKey)) || {};
+        } catch (error) {
+            return {};
+        }
+    };
+
+    const writeCollapsedState = (state) => {
+        try {
+            localStorage.setItem(shoppingListStorageKey, JSON.stringify(state));
+        } catch (error) {
+            // Ignore storage errors (private mode, quota, etc.)
+        }
+    };
+
     const shoppingSections = Array.from(
         document.querySelectorAll('[data-shopping-section]')
     );
+
+    const collapsedState = readCollapsedState();
 
     const toggleAllButton = document.querySelector('[data-toggle-all]');
     const toggleAllLabel = toggleAllButton?.querySelector('[data-toggle-all-label]');
@@ -713,13 +734,20 @@
             return;
         }
 
-        setSectionExpanded(section, true);
+        const recipeId = section.dataset.recipeId;
+        const isCollapsed = collapsedState[recipeId] === 'collapsed';
+
+        setSectionExpanded(section, !isCollapsed);
 
         toggle.addEventListener('click', () => {
-            setSectionExpanded(
-                section,
-                section.dataset.expanded === 'false'
-            );
+            const expanded = section.dataset.expanded === 'false';
+
+            setSectionExpanded(section, expanded);
+
+            if (recipeId) {
+                collapsedState[recipeId] = expanded ? 'expanded' : 'collapsed';
+                writeCollapsedState(collapsedState);
+            }
 
             syncToggleAllLabel();
         });
@@ -733,8 +761,15 @@
 
             shoppingSections.forEach((section) => {
                 setSectionExpanded(section, !allExpanded);
+
+                if (section.dataset.recipeId) {
+                    collapsedState[section.dataset.recipeId] = !allExpanded
+                        ? 'expanded'
+                        : 'collapsed';
+                }
             });
 
+            writeCollapsedState(collapsedState);
             syncToggleAllLabel();
         });
 
