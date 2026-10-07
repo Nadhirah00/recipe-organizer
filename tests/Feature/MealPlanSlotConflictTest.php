@@ -84,6 +84,143 @@ it('adds the meal when the slot is empty', function () {
     ]);
 });
 
+it('renders the week picker in every add to plan modal', function () {
+    $user = User::factory()->create();
+    $recipe = slotRecipe($user, ['name' => 'Hokkien Mee', 'is_public' => true]);
+
+    $pages = [
+        "/recipes/{$recipe->id}",
+        '/recipes',
+        '/favorites',
+        '/discover',
+        '/explore',
+    ];
+
+    foreach ($pages as $page) {
+        $this->actingAs($user)
+            ->get($page)
+            ->assertOk()
+            ->assertSee('data-meal-plan-picker', escape: false)
+            ->assertSee('data-meal-plan-grid', escape: false)
+            ->assertSee('data-meal-plan-slots-url="'.route('meal-planner.slots.index').'"', escape: false);
+    }
+
+    slotRecipe($user, ['ingredients' => 'noodles', 'is_public' => true]);
+
+    $this->actingAs($user)
+        ->post('/find-by-ingredients', ['ingredients' => 'noodles'])
+        ->assertOk()
+        ->assertSee('data-meal-plan-picker', escape: false)
+        ->assertSee('data-meal-plan-grid', escape: false)
+        ->assertSee('data-meal-plan-slots-url="'.route('meal-planner.slots.index').'"', escape: false);
+});
+
+it('adds a recipe to several slots in one request', function () {
+    $user = User::factory()->create();
+    $recipe = slotRecipe($user);
+
+    $response = $this->actingAs($user)->post('/meal-planner', [
+        'recipe_id' => $recipe->id,
+        'slots' => [
+            ['date' => '2026-09-28', 'meal_type' => 'Breakfast'],
+            ['date' => '2026-09-30', 'meal_type' => 'Lunch'],
+            ['date' => '2026-10-02', 'meal_type' => 'Dinner'],
+        ],
+    ]);
+
+    $response->assertRedirectContains('/meal-planner?week=2026-09-28');
+    $response->assertSessionHas('success');
+
+    expect(plannedMeals())->toHaveCount(3);
+});
+
+it('returns every conflict when several selected slots are taken', function () {
+    $user = User::factory()->create();
+    $planned = slotRecipe($user, ['name' => 'Pancakes']);
+    $other = slotRecipe($user, ['name' => 'Waffles']);
+    $incoming = slotRecipe($user, ['name' => 'Salad']);
+
+    occupySlot($user, $planned, '2026-09-29', 'Lunch');
+    occupySlot($user, $other, '2026-10-01', 'Dinner');
+
+    $response = $this->actingAs($user)->postJson('/meal-planner', [
+        'recipe_id' => $incoming->id,
+        'slots' => [
+            ['date' => '2026-09-29', 'meal_type' => 'Lunch'],
+            ['date' => '2026-09-30', 'meal_type' => 'Lunch'],
+            ['date' => '2026-10-01', 'meal_type' => 'Dinner'],
+        ],
+    ]);
+
+    $response->assertStatus(409);
+    $response->assertJsonStructure([
+        'message',
+        'conflict' => ['meal_plan_id', 'date', 'meal_type', 'recipe' => ['id', 'name']],
+        'conflicts' => ['*' => ['meal_plan_id', 'date', 'meal_type', 'recipe' => ['id', 'name']]],
+    ]);
+
+    expect(collect($response->json('conflicts'))->pluck('recipe.name')->all())
+        ->toContain('Pancakes')
+        ->toContain('Waffles');
+});
+
+it('replaces every occupied slot once confirmed', function () {
+    $user = User::factory()->create();
+    $planned = slotRecipe($user, ['name' => 'Pancakes']);
+    $other = slotRecipe($user, ['name' => 'Waffles']);
+    $incoming = slotRecipe($user, ['name' => 'Salad']);
+
+    occupySlot($user, $planned, '2026-09-29', 'Lunch');
+    occupySlot($user, $other, '2026-10-01', 'Dinner');
+
+    $response = $this->actingAs($user)->post('/meal-planner', [
+        'recipe_id' => $incoming->id,
+        'slots' => [
+            ['date' => '2026-09-29', 'meal_type' => 'Lunch'],
+            ['date' => '2026-10-01', 'meal_type' => 'Dinner'],
+        ],
+        'replace' => 1,
+    ]);
+
+    $response->assertSessionHas('success');
+
+    expect(session('success'))
+        ->toContain('Salad')
+        ->toContain('2 slots replaced');
+});
+
+it('reports the planned meals for a week', function () {
+    $user = User::factory()->create();
+    $recipe = slotRecipe($user, ['name' => 'Pancakes']);
+
+    occupySlot($user, $recipe, '2026-09-29', 'Lunch');
+    occupySlot($user, $recipe, '2026-10-01', 'Dinner');
+    occupySlot($user, $recipe, '2026-10-04', 'Breakfast');
+
+    $response = $this->actingAs($user)
+        ->getJson('/meal-planner/slots?week=2026-09-28')
+        ->assertOk()
+        ->assertJson([
+            'week_start' => '2026-09-28',
+            'week_end' => '2026-10-04',
+        ]);
+
+    expect(collect($response->json('slots'))->map(fn ($slot) => $slot['date'].'|'.$slot['meal_type'])->all())
+        ->toBe(['2026-09-29|Lunch', '2026-10-01|Dinner', '2026-10-04|Breakfast']);
+});
+
+it('does not leak another user planned meals through the week slots', function () {
+    $user = User::factory()->create();
+    $other = User::factory()->create();
+
+    occupySlot($other, slotRecipe($other, ['name' => 'Their Pancakes']), '2026-09-29', 'Lunch');
+
+    $this->actingAs($user)
+        ->getJson('/meal-planner/slots?week=2026-09-28')
+        ->assertOk()
+        ->assertJson(['slots' => []]);
+});
+
 it('refuses to overwrite an occupied slot when the replacement is not confirmed', function () {
     $user = User::factory()->create();
     $planned = slotRecipe($user, ['name' => 'Pancakes']);

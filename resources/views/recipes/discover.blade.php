@@ -507,7 +507,7 @@
     class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 px-4"
 >
 
-    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6">
+    <div class="w-full max-w-4xl bg-white rounded-2xl shadow-xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto">
 
         <div class="flex items-start justify-between gap-4 mb-6">
 
@@ -560,51 +560,7 @@
                 value="0"
             >
 
-            <div class="mb-5">
-
-                <label
-                    for="discoverCardMealDate"
-                    class="block text-sm font-semibold text-gray-700 mb-2"
-                >
-                    Date
-                </label>
-
-                <input
-                    type="date"
-                    name="date"
-                    id="discoverCardMealDate"
-                    value="{{ now()->format('Y-m-d') }}"
-                    min="{{ now()->format('Y-m-d') }}"
-                    required
-                    class="w-full border border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-400"
-                >
-
-            </div>
-
-
-            <div class="mb-6">
-
-                <label
-                    for="discoverCardMealType"
-                    class="block text-sm font-semibold text-gray-700 mb-2"
-                >
-                    Meal Type
-                </label>
-
-                <select
-                    name="meal_type"
-                    id="discoverCardMealType"
-                    required
-                    class="w-full border border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-400"
-                >
-
-                    <option value="Breakfast">🍳 Breakfast</option>
-                    <option value="Lunch">🍱 Lunch</option>
-                <option value="Dinner">🍽️ Dinner</option>
-
-            </select>
-
-        </div>
+            @include('meal-plans.partials.add-to-plan-grid')
 
 
         <!-- Existing Meal Warning -->
@@ -670,14 +626,9 @@
         const modal = document.getElementById('discoverCardMealModal');
         const recipeIdInput = document.getElementById('discoverCardMealRecipeId');
         const nameLabel = document.getElementById('discoverCardMealName');
-        const mealType = document.getElementById('discoverCardMealType');
 
         recipeIdInput.value = recipeId;
         nameLabel.textContent = recipeName;
-
-        const validMealTypes = ['Breakfast', 'Lunch', 'Dinner'];
-
-        mealType.value = validMealTypes.includes(category) ? category : 'Lunch';
 
         modal.classList.remove('hidden');
         modal.classList.add('flex');

@@ -335,7 +335,7 @@
     class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 px-4"
 >
 
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto">
 
         <div class="flex items-center justify-between mb-5">
 
@@ -386,63 +386,7 @@
             >
 
 
-            <div class="mb-5">
-
-                <label
-                    for="ingredientMealDate"
-                    class="block text-sm font-semibold text-gray-700 mb-2"
-                >
-                    Date
-                </label>
-
-                <input
-                    type="date"
-                    name="date"
-                    id="ingredientMealDate"
-                    value="{{ now()->format('Y-m-d') }}"
-                    min="{{ now()->format('Y-m-d') }}"
-                    class="w-full border border-gray-300 rounded-lg px-4 py-3"
-                    required
-                >
-
-            </div>
-
-
-            <div class="mb-6">
-
-                <label
-                    for="ingredientMealType"
-                    class="block text-sm font-semibold text-gray-700 mb-2"
-                >
-                    Meal Type
-                </label>
-
-                <p class="text-xs text-gray-400 mt-2">
-                    The meal type is based on the recipe category, but you can change it.
-                </p>
-
-                <select
-                    name="meal_type"
-                    id="ingredientMealType"
-                    class="w-full border border-gray-300 rounded-lg px-4 py-3"
-                    required
-                >
-
-                    <option value="Breakfast">
-                        🍳 Breakfast
-                    </option>
-
-                    <option value="Lunch">
-                        🍱 Lunch
-                    </option>
-
-                    <option value="Dinner">
-                        🍽️ Dinner
-                    </option>
-
-                </select>
-
-            </div>
+            @include('meal-plans.partials.add-to-plan-grid')
 
 
             <!-- Existing Meal Warning -->
@@ -511,39 +455,6 @@
         document.getElementById(
             'ingredientMealRecipeName'
         ).innerText = recipeName;
-
-
-        const mealType =
-            document.getElementById(
-                'ingredientMealType'
-            );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Match recipe category to meal type
-        |--------------------------------------------------------------------------
-        */
-
-        const validMealTypes = [
-            'Breakfast',
-            'Lunch',
-            'Dinner'
-        ];
-
-
-        if (
-            category &&
-            validMealTypes.includes(category)
-        ) {
-
-            mealType.value = category;
-
-        } else {
-
-            mealType.value = 'Lunch';
-
-        }
 
 
         const modal =

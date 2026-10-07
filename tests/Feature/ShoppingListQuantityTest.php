@@ -207,6 +207,30 @@ it('collapses the same ingredient planned twice into one row', function () {
     ]);
 });
 
+it('adds a recipe to several slots at once and keeps one row per ingredient', function () {
+    $user = User::factory()->create();
+
+    $recipe = quantityRecipe($user, '2 cloves garlic');
+
+    planQuantityRecipe($user, $recipe, '2026-09-30');
+
+    $this->actingAs($user)
+        ->post('/shopping-list/generate', ['week' => '2026-09-28'])
+        ->assertRedirect();
+
+    $this->actingAs($user)->post('/meal-planner', [
+        'recipe_id' => $recipe->id,
+        'slots' => [
+            ['date' => '2026-09-29', 'meal_type' => 'Lunch'],
+            ['date' => '2026-10-01', 'meal_type' => 'Dinner'],
+        ],
+    ])->assertRedirect();
+
+    expect(shoppingRows())->toBe([
+        ['Garlic', '2 cloves'],
+    ]);
+});
+
 it('keeps a checked item checked after a sync', function () {
     $user = User::factory()->create();
 

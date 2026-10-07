@@ -215,6 +215,8 @@ Route::middleware('auth')->group(function () {
         ->name('meal-planner.recipes.search');
     Route::get('/meal-planner/slots/check', [MealPlanController::class, 'slotStatus'])
         ->name('meal-planner.slots.check');
+    Route::get('/meal-planner/slots', [MealPlanController::class, 'slotsForWeek'])
+        ->name('meal-planner.slots.index');
     Route::post('/meal-planner', [MealPlanController::class, 'store']);
     Route::delete('/meal-planner/{id}', [MealPlanController::class, 'destroy']);
     Route::delete('/meal-planner', [MealPlanController::class, 'clear'])

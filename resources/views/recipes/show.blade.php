@@ -457,7 +457,7 @@
     class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 px-4"
 >
 
-<div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6">
+<div class="w-full max-w-4xl bg-white rounded-2xl shadow-xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto">
 
 
     <!-- Header -->
@@ -518,69 +518,9 @@
         >
 
 
-        <!-- Date -->
+        <!-- Week Picker -->
 
-        <div class="mb-5">
-
-            <label
-                for="recipeMealDate"
-                class="block text-sm font-semibold text-gray-700 mb-2"
-            >
-                Date
-            </label>
-
-            <input
-                type="date"
-                name="date"
-                id="recipeMealDate"
-                value="{{ now()->format('Y-m-d') }}"
-                min="{{ now()->format('Y-m-d') }}"
-                required
-                class="w-full border border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-400"
-            >
-
-        </div>
-
-
-        <!-- Meal Type -->
-
-        <div class="mb-6">
-
-            <label
-                for="recipeMealType"
-                class="block text-sm font-semibold text-gray-700 mb-2"
-            >
-                Meal Type
-            </label>
-
-            <select
-                name="meal_type"
-                id="recipeMealType"
-                required
-                class="w-full border border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-400"
-            >
-
-                <option value="Breakfast">
-                    🍳 Breakfast
-                </option>
-
-                <option value="Lunch">
-                    🍱 Lunch
-                </option>
-
-                <option value="Dinner">
-                    🍽️ Dinner
-                </option>
-
-            </select>
-
-
-            <p class="text-xs text-gray-400 mt-2">
-                We selected a meal type based on the recipe category.
-                You can change it.
-            </p>
-
-        </div>
+        @include('meal-plans.partials.add-to-plan-grid')
 
 
         <!-- Existing Meal Warning -->
@@ -644,32 +584,6 @@
             document.getElementById(
                 'recipeMealModal'
             );
-
-
-        const category =
-            @js($recipe->category);
-
-
-        const mealType =
-            document.getElementById(
-                'recipeMealType'
-            );
-
-
-        if (
-            category === 'Breakfast' ||
-            category === 'Lunch' ||
-            category === 'Dinner'
-        ) {
-
-            mealType.value = category;
-
-        } else {
-
-            mealType.value = 'Lunch';
-
-        }
-
 
         modal.classList.remove('hidden');
         modal.classList.add('flex');
